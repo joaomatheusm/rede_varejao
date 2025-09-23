@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     color: "#FF4757",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
   },
 });
