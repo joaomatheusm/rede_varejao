@@ -20,7 +20,7 @@ const LoginScreen = () => {
 
   const handleLogin = () => {
     console.log("Login pressed:", { email, password });
-    // Implementar lógica de login aqui
+    
   };
 
   const handleSignUp = () => {

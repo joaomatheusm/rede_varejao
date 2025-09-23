@@ -37,7 +37,7 @@ const SignUpScreen = () => {
       return;
     }
     setLoading(false);
-    router.replace("/" /* Rota para onde o usuário deve ser redirecionado após o cadastro */);
+    router.replace("/");
 
   }
 
@@ -71,9 +71,9 @@ const SignUpScreen = () => {
             </Text>
           </View>
 
-          {/* Formulário */}
+          {/* FORMULÁRIO */}
           <View style={styles.formContainer}>
-            {/* Campo Nome Completo */}
+            {/* CAMPO NOME COMPLETO */}
             <View style={styles.inputContainer}>
               <Ionicons
                 name="person-outline"
@@ -91,7 +91,7 @@ const SignUpScreen = () => {
               />
             </View>
 
-            {/* Campo E-mail */}
+            {/* CAMPO EMAIL */}
             <View style={styles.inputContainer}>
               <Ionicons
                 name="mail-outline"
