@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -17,20 +18,30 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 
 const SignUpScreen = () => {
-  const [fullName, setFullName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSignUp() {
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert(
+        "Preencha todos os campos",
+        "Nome, e-mail e senha são obrigatórios."
+      );
+      return;
+    }
     setLoading(true);
-
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
+      options: {
+        data: {
+          name: name,
+        },
+      },
     });
-
     if (error) {
       Alert.alert("Erro ao cadastrar", error.message);
       setLoading(false);
@@ -38,7 +49,6 @@ const SignUpScreen = () => {
     }
     setLoading(false);
     router.replace("/");
-
   }
 
   const handleLogin = () => {
@@ -59,7 +69,7 @@ const SignUpScreen = () => {
             {/* Logo sem fundo */}
             <View style={styles.logoContainer}>
               <Image
-                source={require("../../../../assets/logo.png")} 
+                source={require("../../../../assets/logo.png")}
                 style={styles.logoImage}
                 resizeMode="contain"
               />
@@ -84,8 +94,8 @@ const SignUpScreen = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Nome completo"
-                value={fullName}
-                onChangeText={setFullName}
+                value={name}
+                onChangeText={setName}
                 autoCapitalize="words"
                 placeholderTextColor="#999"
               />
@@ -142,8 +152,13 @@ const SignUpScreen = () => {
             <TouchableOpacity
               style={styles.signUpButton}
               onPress={handleSignUp}
+              disabled={loading}
             >
-              <Text style={styles.signUpButtonText}>Cadastrar</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.signUpButtonText}>Cadastrar</Text>
+              )}
             </TouchableOpacity>
 
             {/* Link Login */}

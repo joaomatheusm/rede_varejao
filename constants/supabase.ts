@@ -1,4 +1,4 @@
-export const supaURL = "https://tuayohblcodzdwxdojcw.supabase.co";
+export const supaURL = "https://xtgghcpjpqjqdekjqalu.supabase.co";
 
 export const anonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1YXlvaGJsY29kemR3eGRvamN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1ODMzNzYsImV4cCI6MjA3NDE1OTM3Nn0.zSOlaOBP2QniSva1ObHe_UX9nENOpaCNXSG1nCy9_Xc";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0Z2doY3BqcHFqcWRla2pxYWx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NDg2MjMsImV4cCI6MjA3NDMyNDYyM30.5S2fYeA4LURKERvvgoDs8q7y0rKICC_6F7VgWYNhl6A";
