@@ -69,7 +69,7 @@ const SignUpScreen = () => {
             {/* Logo sem fundo */}
             <View style={styles.logoContainer}>
               <Image
-                source={require("../../../../assets/logo.png")}
+                source={require("../../../../assets/img/logo.png")}
                 style={styles.logoImage}
                 resizeMode="contain"
               />

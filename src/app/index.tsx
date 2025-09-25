@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -12,16 +13,30 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { supabase } from "../lib/supabase";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    console.log("Login pressed:", { email, password });
-    
-  };
+  async function handleLogin() {
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      Alert.alert("Erro ao entrar", error.message);
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+    router.replace("/(panel)/home/page");
+  }
 
   const handleSignUp = () => {
     console.log("Sign up pressed");
@@ -117,7 +132,9 @@ const LoginScreen = () => {
 
           {/* Botão Entrar */}
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Entrar</Text>
+            <Text style={styles.loginButtonText}>
+              {loading ? "Carregando..." : "Entrar"}
+            </Text>
           </TouchableOpacity>
 
           {/* Link Cadastro */}
@@ -278,7 +295,7 @@ const styles = StyleSheet.create({
   signUpText: {
     color: "#666",
     fontSize: 16, // Aumentado de 14 para 16
-    fontWeight: "500"
+    fontWeight: "500",
   },
   signUpLink: {
     color: "#FF4757",
@@ -287,4 +304,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen
+export default LoginScreen;
