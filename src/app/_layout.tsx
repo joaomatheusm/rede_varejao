@@ -1,8 +1,6 @@
-import { Stack } from "expo-router";
-import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { Stack, router } from "expo-router";
 import { useEffect } from "react";
-import { supabase } from "../lib/supabase";
-import { router } from "expo-router";
+import { AuthProvider, useAuth } from "../contexts/AuthContext";
 
 export default function RootLayout() {
   return (
@@ -13,43 +11,34 @@ export default function RootLayout() {
 }
 
 function MainLayout() {
-  const {setAuth} = useAuth();
+  const { user, loading } = useAuth();
 
-  useEffect( () => {
-    supabase.auth.onAuthStateChange( (_event, session) => {
-      if(session){
-        setAuth(session.user);
-        router.replace("/(panel)/home/page");
-      }
-      
-      setAuth(null);
-      router.replace('/(auth)/signin/page');
+  useEffect(() => {
+    if (loading) return; // Aguarda carregar a sessão
 
-    })
-  }, []);
+    if (user) {
+      router.replace("/(panel)/home/page");
+    } else {
+      router.replace("/(auth)/signin/page");
+    }
+  }, [user, loading]);
 
   return (
     // DEFINA TELAS DE NAVEGAÇÃO AQUI
-    <Stack> 
-      <Stack.Screen 
-        name="index" 
-        options={{ headerShown: false }} 
-      />
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
 
       <Stack.Screen
         name="(auth)/signin/page"
         options={{ headerShown: false }}
-      />  
-      
+      />
+
       <Stack.Screen
         name="(auth)/signup/page"
         options={{ headerShown: false }}
-      />  
-      
-      <Stack.Screen
-        name="(panel)/home/page" 
-        options={{ headerShown: false }}
       />
+
+      <Stack.Screen name="(panel)/home/page" options={{ headerShown: false }} />
     </Stack>
   );
 }

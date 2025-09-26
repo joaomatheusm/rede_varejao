@@ -48,7 +48,7 @@ const SignUpScreen = () => {
       return;
     }
     setLoading(false);
-    router.replace("/");
+    router.replace("/(auth)/signin/page");
   }
 
   const handleLogin = () => {
