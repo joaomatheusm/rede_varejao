@@ -1,11 +1,11 @@
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-// Mova os tipos que o componente precisa
 type Deal = {
     id: string;
     name: string;
-    price: string;
+    originalPrice: number;      
+    offerPrice?: number;     
     image: string;
 };
 
@@ -17,11 +17,18 @@ const DealItem = ({ item }: DealItemProps) => (
     <TouchableOpacity style={styles.dealItem}>
         <Image source={{ uri: item.image }} style={styles.dealImage} resizeMode="cover" />
         <Text style={styles.dealName}>{item.name}</Text>
-        <Text style={styles.dealPrice}>{item.price}</Text>
+
+        {item.offerPrice ? (
+            <View style={styles.priceContainer}>
+                <Text style={styles.originalPrice}>R$ {item.originalPrice.toFixed(2)}</Text>
+                <Text style={styles.offerPrice}>R$ {item.offerPrice.toFixed(2)}</Text>
+            </View>
+        ) : (
+            <Text style={styles.offerPrice}>R$ {item.originalPrice.toFixed(2)}</Text>
+        )}
     </TouchableOpacity>
 );
 
-// Mova APENAS os estilos que este componente usa
 const styles = StyleSheet.create({
     dealItem: {
         backgroundColor: "#F8F9FA",
@@ -43,10 +50,21 @@ const styles = StyleSheet.create({
         color: '#333',
         textAlign: 'center',
     },
-    dealPrice: {
-        fontSize: 13,
-        color: '#666',
+    priceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginTop: 4,
+    },
+    originalPrice: {
+        fontSize: 12,
+        color: '#999',
+        textDecorationLine: 'line-through',
+        marginRight: 6,
+    },
+    offerPrice: {
+        fontSize: 13,
+        color: '#FF4757',
+        fontWeight: 'bold',
     },
 });
 
