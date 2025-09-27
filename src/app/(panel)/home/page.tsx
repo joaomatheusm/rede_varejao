@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     FlatList,
     Image,
@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CategoryItem from "../../../components/CategoryItem";
 import DealItem from "../../../components/DealItem";
+import { fetchProdutos } from "../../../lib/produtoService";
 import { styles } from "./styles";
 
 const PRIMARY_COLOR = "#FF4757";
@@ -28,18 +29,24 @@ const categories = [
     { id: "6", name: "Bebidas", image: "https://cdn-icons-png.flaticon.com/512/3050/3050130.png" },
 ];
 
-// Dados implementados hardcoded temporariamente.
-const dailyDeals = [
-    { id: "1", name: "Tomate Italiano", price: "R$ 8,99/kg", image: "https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&cs=tinysrgb&w=600" },
-    { id: "2", name: "Banana Prata", price: "R$ 5,49/kg", image: "https://images.pexels.com/photos/2280925/pexels-photo-2280925.jpeg?auto=compress&cs=tinysrgb&w=600" },
-    { id: "3", name: "Alface Crespa", price: "R$ 3,99/un", image: "https://images.pexels.com/photos/2893635/pexels-photo-2893635.jpeg?auto=compress&cs=tinysrgb&w=600" },
-];
-
 const HomeScreen = () => {
+    const [dailyDeals, setDailyDeals] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadProducts() {
+            const data = await fetchProdutos();
+            setDailyDeals(data || []);
+            setLoading(false);
+        }
+        loadProducts();
+    }, []);
+
     return (
         <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.contentContainer}>
+                    {/* Header */}
                     <View style={styles.header}>
                         <Image
                             source={{ uri: "https://logopng.com.br/logos/mercado-pago-53.png" }}
@@ -51,13 +58,21 @@ const HomeScreen = () => {
                         </TouchableOpacity>
                     </View>
 
+                    {/* Search */}
                     <View style={styles.searchContainer}>
                         <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
-                        <TextInput placeholder="Buscar produtos..." style={styles.searchInput} placeholderTextColor="#999" />
+                        <TextInput
+                            placeholder="Buscar produtos..."
+                            style={styles.searchInput}
+                            placeholderTextColor="#999"
+                        />
                     </View>
 
+                    {/* Banner */}
                     <ImageBackground
-                        source={{ uri: "https://images.pexels.com/photos/1132047/pexels-photo-1132047.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" }}
+                        source={{
+                            uri: "https://images.pexels.com/photos/1132047/pexels-photo-1132047.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                        }}
                         style={styles.specialOfferBanner}
                         imageStyle={{ borderRadius: 16 }}
                     >
@@ -67,6 +82,7 @@ const HomeScreen = () => {
                         </View>
                     </ImageBackground>
 
+                    {/* Categorias */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Categorias</Text>
                         <View style={styles.categoriesGrid}>
@@ -76,20 +92,36 @@ const HomeScreen = () => {
                         </View>
                     </View>
 
+                    {/* Ofertas do Dia */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Ofertas do Dia</Text>
-                        <FlatList
-                            data={dailyDeals}
-                            renderItem={({ item }) => <DealItem item={item} />}
-                            keyExtractor={(item) => item.id}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ paddingVertical: 10 }}
-                        />
+                        {loading ? (
+                            <Text>Carregando...</Text>
+                        ) : (
+                            <FlatList
+                                data={dailyDeals}
+                                renderItem={({ item }) => (
+                                    <DealItem
+                                        item={{
+                                            id: item.id,
+                                            name: item.nome,
+                                            originalPrice: item.preco,   
+                                            offerPrice: item.preco_oferta,  
+                                            image: item.imagem_url,
+                                        }}
+                                    />
+                                )}
+                                keyExtractor={(item) => item.id.toString()}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ paddingVertical: 10 }}
+                            />
+                        )}
                     </View>
                 </View>
             </ScrollView>
 
+            {/* TabBar */}
             <View style={styles.tabBar}>
                 <TouchableOpacity style={styles.tabItem}>
                     <Ionicons name="home" size={24} color={PRIMARY_COLOR} />
