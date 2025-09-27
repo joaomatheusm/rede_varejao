@@ -14,32 +14,28 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CategoryItem from "../../../components/CategoryItem";
 import DealItem from "../../../components/DealItem";
+import { fetchCategorias } from "../../../lib/categoriaService";
 import { fetchProdutos } from "../../../lib/produtoService";
 import { styles } from "./styles";
 
 const PRIMARY_COLOR = "#FF4757";
 
-// Dados de categoria implementados hardcoded temporariamente.
-const categories = [
-    { id: "1", name: "Frutas", image: "https://cdn-icons-png.flaticon.com/512/3081/3081923.png" },
-    { id: "2", name: "Legumes", image: "https://cdn-icons-png.flaticon.com/512/2153/2153784.png" },
-    { id: "3", name: "Verduras", image: "https://cdn-icons-png.flaticon.com/512/3703/3703254.png" },
-    { id: "4", name: "Orgânicos", image: "https://cdn-icons-png.flaticon.com/512/3435/3435532.png" },
-    { id: "5", name: "Temperos", image: "https://cdn-icons-png.flaticon.com/512/3595/3595267.png" },
-    { id: "6", name: "Bebidas", image: "https://cdn-icons-png.flaticon.com/512/3050/3050130.png" },
-];
-
 const HomeScreen = () => {
     const [dailyDeals, setDailyDeals] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function loadProducts() {
-            const data = await fetchProdutos();
-            setDailyDeals(data || []);
+        async function loadData() {
+            const [produtosData, categoriasData] = await Promise.all([
+                fetchProdutos(),
+                fetchCategorias()
+            ]);
+            setDailyDeals(produtosData || []);
+            setCategories(categoriasData || []);
             setLoading(false);
         }
-        loadProducts();
+        loadData();
     }, []);
 
     return (
@@ -87,7 +83,14 @@ const HomeScreen = () => {
                         <Text style={styles.sectionTitle}>Categorias</Text>
                         <View style={styles.categoriesGrid}>
                             {categories.map((item) => (
-                                <CategoryItem key={item.id} item={item} />
+                                <CategoryItem
+                                    key={item.id}
+                                    item={{
+                                        id: item.id,
+                                        name: item.nome,       // adapte para o nome correto da coluna
+                                        image: item.imagem_url // adapte para o nome correto da coluna
+                                    }}
+                                />
                             ))}
                         </View>
                     </View>
