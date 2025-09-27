@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     FlatList,
     Image,
     ImageBackground,
@@ -99,7 +100,9 @@ const HomeScreen = () => {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Ofertas do Dia</Text>
                         {loading ? (
-                            <Text>Carregando...</Text>
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: 150 }}>
+                                <ActivityIndicator size="large" color={PRIMARY_COLOR} />
+                            </View>
                         ) : (
                             <FlatList
                                 data={dailyDeals}
