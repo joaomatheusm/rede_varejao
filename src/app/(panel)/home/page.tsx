@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CategoryItem from "../../../components/CategoryItem";
 import DealItem from "../../../components/DealItem";
+import TabBar from "../../../components/TabBar";
 import { fetchCategorias } from "../../../lib/categoriaService";
 import { fetchProdutos } from "../../../lib/produtoService";
 import { styles } from "./styles";
@@ -127,29 +128,7 @@ const HomeScreen = () => {
                 </View>
             </ScrollView>
 
-            {/* TabBar */}
-            <View style={styles.tabBar}>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Ionicons name="home" size={24} color={PRIMARY_COLOR} />
-                    <Text style={[styles.tabLabel, { color: PRIMARY_COLOR }]}>Início</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Ionicons name="search" size={24} color="#999" />
-                    <Text style={styles.tabLabel}>Buscar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Ionicons name="cart-outline" size={24} color="#999" />
-                    <Text style={styles.tabLabel}>Carrinho</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Ionicons name="heart-outline" size={24} color="#999" />
-                    <Text style={styles.tabLabel}>Favoritos</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Ionicons name="person-outline" size={24} color="#999" />
-                    <Text style={styles.tabLabel}>Perfil</Text>
-                </TouchableOpacity>
-            </View>
+            <TabBar />
         </SafeAreaView>
     );
 };

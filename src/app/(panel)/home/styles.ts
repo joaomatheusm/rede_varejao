@@ -72,20 +72,4 @@ export const styles = StyleSheet.create({
         flexWrap: "wrap",
         justifyContent: "space-between",
     },
-    tabBar: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        paddingVertical: 10,
-        borderTopWidth: 1,
-        borderTopColor: "#EEE",
-        backgroundColor: "white",
-    },
-    tabItem: {
-        alignItems: "center",
-    },
-    tabLabel: {
-        fontSize: 12,
-        color: "#999",
-        marginTop: 2,
-    },
 });
