@@ -1,5 +1,14 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuItem } from "../../../components/MenuItem";
 import TabBar from "../../../components/TabBar";
@@ -15,6 +24,52 @@ const menuItems = [
 ];
 
 const ProfileScreen: React.FC = () => {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    Alert.alert("Sair da Conta", "Tem certeza que deseja sair da sua conta?", [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Sair",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            // Limpar todos os dados de autenticação e sessão
+            await AsyncStorage.multiRemove([
+              "userToken",
+              "userId",
+              "userEmail",
+              "userData",
+              "authToken",
+              "refreshToken",
+              "isLoggedIn",
+              "cartItems",
+              "favoriteItems",
+              "userPreferences",
+              "lastLogin",
+            ]);
+
+            // Log para debug
+            console.log("✅ Logout realizado com sucesso - Sessão limpa");
+
+            // Redirecionar para a tela de login/inicial
+            router.replace("/(auth)/signin/page");
+          } catch (error) {
+            console.error("❌ Erro ao fazer logout:", error);
+            Alert.alert(
+              "Erro",
+              "Ocorreu um erro ao sair da conta. Tente novamente.",
+              [{ text: "OK" }]
+            );
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <ScrollView
@@ -49,7 +104,7 @@ const ProfileScreen: React.FC = () => {
           </View>
 
           {/* Botão de Sair */}
-          <TouchableOpacity style={styles.logoutButton}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Sair da Conta</Text>
           </TouchableOpacity>
         </View>
