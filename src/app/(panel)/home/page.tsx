@@ -14,21 +14,22 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CategoryItem from "../../../components/CategoryItem";
-import DealItem from "../../../components/DealItem";
+import ProductItem from "../../../components/ProductItem";
 import TabBar from "../../../components/TabBar";
 import { fetchCategorias } from "../../../lib/categoriaService";
-import { fetchProdutos } from "../../../lib/produtoService";
+import { fetchProdutos, Produto } from "../../../lib/produtoService";
 import { styles } from "./styles";
 
 const PRIMARY_COLOR = "#FF4757";
 
 const HomeScreen = () => {
-    const [dailyDeals, setDailyDeals] = useState<any[]>([]);
+    const [dailyDeals, setDailyDeals] = useState<Produto[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadData() {
+            setLoading(true);
             const [produtosData, categoriasData] = await Promise.all([
                 fetchProdutos(),
                 fetchCategorias()
@@ -47,7 +48,7 @@ const HomeScreen = () => {
                     {/* Header */}
                     <View style={styles.header}>
                         <Image
-                            source={{ uri: "https://logopng.com.br/logos/mercado-pago-53.png" }}
+                            source={{ uri: "" }}
                             style={styles.logo}
                             resizeMode="contain"
                         />
@@ -88,7 +89,7 @@ const HomeScreen = () => {
                                 <CategoryItem
                                     key={item.id}
                                     item={{
-                                        id: item.id,
+                                        id: item.id.toString(),
                                         name: item.nome,
                                         image: item.imagem_url
                                     }}
@@ -108,20 +109,12 @@ const HomeScreen = () => {
                             <FlatList
                                 data={dailyDeals}
                                 renderItem={({ item }) => (
-                                    <DealItem
-                                        item={{
-                                            id: item.id,
-                                            name: item.nome,
-                                            originalPrice: item.preco,   
-                                            offerPrice: item.preco_oferta,  
-                                            image: item.imagem_url,
-                                        }}
-                                    />
+                                    <ProductItem item={item} variant="horizontalScroll" />
                                 )}
                                 keyExtractor={(item) => item.id.toString()}
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ paddingVertical: 10 }}
+                                contentContainerStyle={{ paddingVertical: 10, paddingLeft: 8 }}
                             />
                         )}
                     </View>

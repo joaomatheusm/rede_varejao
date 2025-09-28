@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -11,14 +12,26 @@ type CategoryItemProps = {
     item: Category;
 };
 
-const CategoryItem = ({ item }: CategoryItemProps) => (
-    <TouchableOpacity style={styles.categoryItem}>
-        <View style={styles.categoryImageContainer}>
-            <Image source={{ uri: item.image }} style={styles.categoryImage} resizeMode="contain" />
-        </View>
-        <Text style={styles.categoryText}>{item.name}</Text>
-    </TouchableOpacity>
-);
+const CategoryItem = ({ item }: CategoryItemProps) => {
+    const handlePress = () => {
+        router.push({
+            pathname: "/(panel)/category/[id]", 
+            params: { 
+                id: item.id,    
+                name: item.name  
+            }
+        });
+    };
+
+    return (
+        <TouchableOpacity style={styles.categoryItem} onPress={handlePress}> 
+            <View style={styles.categoryImageContainer}>
+                <Image source={{ uri: item.image }} style={styles.categoryImage} resizeMode="contain" />
+            </View>
+            <Text style={styles.categoryText}>{item.name}</Text>
+        </TouchableOpacity>
+    );
+};
 
 const styles = StyleSheet.create({
     categoryItem: {
