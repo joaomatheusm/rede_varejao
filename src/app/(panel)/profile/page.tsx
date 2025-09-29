@@ -1,14 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
-import {
-  Alert,
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuItem } from "../../../components/MenuItem";
 import TabBar from "../../../components/TabBar";
@@ -84,14 +77,6 @@ const ProfileScreen: React.FC = () => {
 
           {/* Informações do Usuário */}
           <View style={styles.profileHeader}>
-            <Image
-              source={{
-                uri:
-                  user?.user_metadata?.avatar_url ||
-                  `https://i.pravatar.cc/150?u=${user?.email || "default"}`,
-              }}
-              style={styles.avatar}
-            />
             <Text style={styles.profileName}>
               {user?.user_metadata?.full_name ||
                 user?.email?.split("@")[0] ||
