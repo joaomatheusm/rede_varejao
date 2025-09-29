@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuItem } from "../../../components/MenuItem";
 import TabBar from "../../../components/TabBar";
+import { useAuth } from "../../../contexts/AuthContext";
+import { supabase } from "../../../lib/supabase";
 import { styles } from "./styles";
 
 const menuItems = [
@@ -25,6 +27,7 @@ const menuItems = [
 
 const ProfileScreen: React.FC = () => {
   const router = useRouter();
+  const { user, setAuth } = useAuth();
 
   const handleLogout = async () => {
     Alert.alert("Sair da Conta", "Tem certeza que deseja sair da sua conta?", [
@@ -37,26 +40,26 @@ const ProfileScreen: React.FC = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            // Limpar todos os dados de autenticação e sessão
+            // Fazer logout no Supabase
+            const { error } = await supabase.auth.signOut();
+
+            if (error) {
+              throw error;
+            }
+
+            // Limpar o contexto de autenticação
+            setAuth(null);
+
+            // Limpar dados locais opcionais (carrinho, favoritos, etc.)
             await AsyncStorage.multiRemove([
-              "userToken",
-              "userId",
-              "userEmail",
-              "userData",
-              "authToken",
-              "refreshToken",
-              "isLoggedIn",
               "cartItems",
               "favoriteItems",
               "userPreferences",
-              "lastLogin",
             ]);
 
-            // Log para debug
-            console.log("✅ Logout realizado com sucesso - Sessão limpa");
+            console.log("✅ Logout realizado com sucesso");
 
-            // Redirecionar para a tela de login/inicial
-            router.replace("/(auth)/signin/page");
+            // O redirecionamento será feito automaticamente pelo _layout.tsx
           } catch (error) {
             console.error("❌ Erro ao fazer logout:", error);
             Alert.alert(
@@ -83,12 +86,20 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.profileHeader}>
             <Image
               source={{
-                uri: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
+                uri:
+                  user?.user_metadata?.avatar_url ||
+                  `https://i.pravatar.cc/150?u=${user?.email || "default"}`,
               }}
               style={styles.avatar}
             />
-            <Text style={styles.profileName}>Teste</Text>
-            <Text style={styles.profileEmail}>Teste@email.com</Text>
+            <Text style={styles.profileName}>
+              {user?.user_metadata?.full_name ||
+                user?.email?.split("@")[0] ||
+                "Usuário"}
+            </Text>
+            <Text style={styles.profileEmail}>
+              {user?.email || "email@exemplo.com"}
+            </Text>
           </View>
 
           {/* Menu de opções */}
