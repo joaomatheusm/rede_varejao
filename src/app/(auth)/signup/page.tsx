@@ -32,7 +32,9 @@ const SignUpScreen = () => {
       );
       return;
     }
+
     setLoading(true);
+
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
@@ -42,13 +44,29 @@ const SignUpScreen = () => {
         },
       },
     });
+
     if (error) {
       Alert.alert("Erro ao cadastrar", error.message);
       setLoading(false);
       return;
     }
+
+    // Fazer logout imediatamente após cadastro para não auto-logar
+    await supabase.auth.signOut();
+
     setLoading(false);
-    router.replace("/(auth)/signin/page");
+
+    // Mostrar mensagem de sucesso
+    Alert.alert(
+      "Cadastro realizado!",
+      "Sua conta foi criada com sucesso. Faça login para continuar.",
+      [
+        {
+          text: "OK",
+          onPress: () => router.replace("/(auth)/signin/page"),
+        },
+      ]
+    );
   }
 
   const handleLogin = () => {
