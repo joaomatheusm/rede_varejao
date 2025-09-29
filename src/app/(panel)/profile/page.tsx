@@ -84,14 +84,6 @@ const ProfileScreen: React.FC = () => {
 
           {/* Informações do Usuário */}
           <View style={styles.profileHeader}>
-            <Image
-              source={{
-                uri:
-                  user?.user_metadata?.avatar_url ||
-                  `https://i.pravatar.cc/150?u=${user?.email || "default"}`,
-              }}
-              style={styles.avatar}
-            />
             <Text style={styles.profileName}>
               {user?.user_metadata?.full_name ||
                 user?.email?.split("@")[0] ||
