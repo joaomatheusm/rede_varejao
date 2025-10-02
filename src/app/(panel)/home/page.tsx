@@ -7,9 +7,8 @@ import {
   ImageBackground,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -58,21 +57,6 @@ const HomeScreen = () => {
             <TouchableOpacity>
               <Ionicons name="notifications-outline" size={26} color="#333" />
             </TouchableOpacity>
-          </View>
-
-          {/* Search */}
-          <View style={styles.searchContainer}>
-            <Ionicons
-              name="search-outline"
-              size={20}
-              color="#999"
-              style={styles.searchIcon}
-            />
-            <TextInput
-              placeholder="Buscar produtos..."
-              style={styles.searchInput}
-              placeholderTextColor="#999"
-            />
           </View>
 
           {/* Banner */}
