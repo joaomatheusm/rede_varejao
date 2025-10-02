@@ -2,12 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCart } from "../contexts/CartContext";
 
 const PRIMARY_COLOR = "#FF4757";
 
 export default function TabBar() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { totalItems } = useCart();
 
   return (
     <View
@@ -54,6 +56,11 @@ export default function TabBar() {
         >
           Carrinho
         </Text>
+        {totalItems > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{totalItems}</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.tabItem}>
@@ -95,13 +102,38 @@ export const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#EEE",
     backgroundColor: "white",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   tabItem: {
     alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
   },
   tabLabel: {
     fontSize: 12,
     color: "#999",
     marginTop: 2,
+  },
+  badge: {
+    position: 'absolute',
+    right: 18,
+    top: -3,
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
