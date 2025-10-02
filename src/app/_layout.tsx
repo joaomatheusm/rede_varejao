@@ -14,17 +14,17 @@ export default function RootLayout() {
 }
 
 function MainLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, isSigningUp } = useAuth();
 
   useEffect(() => {
-    if (loading) return; // Aguarda carregar a sessão
+    if (loading || isSigningUp) return; // Aguarda carregar a sessão ou finalizar cadastro
 
     if (user) {
       router.replace("/(panel)/home/page");
     } else {
       router.replace("/(auth)/signin/page");
     }
-  }, [user, loading]);
+  }, [user, loading, isSigningUp]);
 
   return (
     // DEFINA TELAS DE NAVEGAÇÃO AQUI
