@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCart } from '../contexts/CartContext';
 import { Produto } from '../lib/produtoService';
 
 const PRIMARY_COLOR = "#FF4757";
@@ -12,6 +13,12 @@ type ProductItemProps = {
 
 const ProductItem = ({ item, variant = 'verticalGrid' }: ProductItemProps) => {
     const cardStyle = variant === 'horizontalScroll' ? styles.horizontalCard : styles.verticalCard;
+
+    const { addToCart, loading } = useCart();
+
+    const handleAddToCart = async () => {
+        await addToCart(item);
+    };
 
     return (
         <TouchableOpacity style={[styles.baseCard, cardStyle]}>
@@ -33,8 +40,17 @@ const ProductItem = ({ item, variant = 'verticalGrid' }: ProductItemProps) => {
                 ) : (
                     <Text style={styles.normalPrice}>R$ {item.preco.toFixed(2).replace('.', ',')}</Text>
                 )}
-                <TouchableOpacity style={styles.addButton}>
-                    <Ionicons name="add" size={20} color="#FFF" />
+
+                <TouchableOpacity 
+                    style={styles.addButton} 
+                    onPress={handleAddToCart}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                        <Ionicons name="add" size={20} color="#FFF" />
+                    )}
                 </TouchableOpacity>
             </View>
         </TouchableOpacity>
@@ -53,13 +69,15 @@ const styles = StyleSheet.create({
         shadowRadius: 1.41,
         elevation: 2,
         position: 'relative',
+        justifyContent: 'space-between'
     },
     verticalCard: {
         flex: 1,
         maxWidth: '46%',
     },
     horizontalCard: {
-        width: 150,
+        width: 160,
+        height: 230,
         marginRight: 10,
     },
     productImage: { 
@@ -96,9 +114,9 @@ const styles = StyleSheet.create({
     },
     addButton: { 
         backgroundColor: '#20C997', 
-        width: 28, 
-        height: 28, 
-        borderRadius: 14, 
+        width: 32, 
+        height: 32, 
+        borderRadius: 16, 
         justifyContent: 'center', 
         alignItems: 'center', 
     },

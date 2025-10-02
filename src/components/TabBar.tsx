@@ -37,9 +37,23 @@ export default function TabBar() {
         <Text style={styles.tabLabel}>Buscar</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.tabItem}>
-        <Ionicons name="cart-outline" size={24} color="#999" />
-        <Text style={styles.tabLabel}>Carrinho</Text>
+      <TouchableOpacity
+        style={styles.tabItem}
+        onPress={() => router.push("/(panel)/cart/page")}
+      >
+        <Ionicons
+          name={pathname.includes("/cart") ? "cart" : "cart-outline"}
+          size={24}
+          color={pathname.includes("/cart") ? PRIMARY_COLOR : "#999"}
+        />
+        <Text
+          style={[
+            styles.tabLabel,
+            { color: pathname.includes("/cart") ? PRIMARY_COLOR : "#999" },
+          ]}
+        >
+          Carrinho
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.tabItem}>

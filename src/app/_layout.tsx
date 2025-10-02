@@ -1,11 +1,14 @@
 import { Stack, router } from "expo-router";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { CartProvider } from "../contexts/CartContext";
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <MainLayout />
+      <CartProvider>
+        <MainLayout />
+      </CartProvider>
     </AuthProvider>
   );
 }
@@ -40,6 +43,7 @@ function MainLayout() {
 
       <Stack.Screen name="(panel)/home/page" options={{ headerShown: false }} />
       <Stack.Screen name="(panel)/profile/page" options={{ headerShown: false }} />
+      <Stack.Screen name="(panel)/cart/page" options={{ headerShown: false }} />
       <Stack.Screen name="(panel)/category/[id]" options={{ headerShown: false }} /> 
     </Stack>
   );
