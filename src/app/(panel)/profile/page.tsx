@@ -7,7 +7,7 @@ import { MenuItem } from "../../../components/MenuItem";
 import TabBar from "../../../components/TabBar";
 import { useAuth } from "../../../contexts/AuthContext";
 import { supabase } from "../../../lib/supabase";
-import { styles } from "./styles";
+import { styles } from "../../../styles/profile";
 
 const menuItems = [
   { icon: "person-outline" as const, text: "Meus Dados", screen: "UserData" },

@@ -18,7 +18,7 @@ import ProductItem from "../../../components/ProductItem";
 import TabBar from "../../../components/TabBar";
 import { fetchCategorias } from "../../../lib/categoriaService";
 import { fetchProdutos, Produto } from "../../../lib/produtoService";
-import { styles } from "./styles";
+import { styles } from "../../../styles/home";
 
 const PRIMARY_COLOR = "#FF4757";
 
