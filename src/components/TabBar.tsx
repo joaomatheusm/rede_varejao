@@ -15,12 +15,13 @@ export default function TabBar() {
     <View
       style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 10) }]}
     >
+      {/* Tab Início */}
       <TouchableOpacity
         style={styles.tabItem}
         onPress={() => router.push("/(panel)/home/page")}
       >
         <Ionicons
-          name="home"
+          name={pathname.includes("/home") ? "home" : "home-outline"}
           size={24}
           color={pathname.includes("/home") ? PRIMARY_COLOR : "#999"}
         />
@@ -34,11 +35,27 @@ export default function TabBar() {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.tabItem}>
-        <Ionicons name="search" size={24} color="#999" />
-        <Text style={styles.tabLabel}>Buscar</Text>
+      {/* Tab Buscar */}
+      <TouchableOpacity
+        style={styles.tabItem}
+        onPress={() => router.push("/(panel)/search/page")}
+      >
+        <Ionicons
+          name={pathname.includes("/search") ? "search" : "search-outline"}
+          size={24}
+          color={pathname.includes("/search") ? PRIMARY_COLOR : "#999"}
+        />
+        <Text
+          style={[
+            styles.tabLabel,
+            { color: pathname.includes("/search") ? PRIMARY_COLOR : "#999" },
+          ]}
+        >
+          Buscar
+        </Text>
       </TouchableOpacity>
 
+      {/* Tab Carrinho */}
       <TouchableOpacity
         style={styles.tabItem}
         onPress={() => router.push("/(panel)/cart/page")}
@@ -56,6 +73,7 @@ export default function TabBar() {
         >
           Carrinho
         </Text>
+        {/* Badge com a contagem de itens */}
         {totalItems > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{totalItems}</Text>
@@ -63,17 +81,19 @@ export default function TabBar() {
         )}
       </TouchableOpacity>
 
+      {/* Tab Favoritos */}
       <TouchableOpacity style={styles.tabItem}>
         <Ionicons name="heart-outline" size={24} color="#999" />
         <Text style={styles.tabLabel}>Favoritos</Text>
       </TouchableOpacity>
 
+      {/* Tab Perfil */}
       <TouchableOpacity
         style={styles.tabItem}
         onPress={() => router.push("/(panel)/profile/page")}
       >
         <Ionicons
-          name="person"
+          name={pathname.includes("/profile") ? "person" : "person-outline"}
           size={24}
           color={pathname.includes("/profile") ? PRIMARY_COLOR : "#999"}
         />

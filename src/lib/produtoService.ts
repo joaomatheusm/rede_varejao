@@ -42,3 +42,21 @@ export async function fetchProdutosPorCategoria(categoryId: string): Promise<Pro
 
     return (data as Produto[]) || [];
 }
+
+export async function searchProdutos(query: string): Promise<Produto[]> {
+    if (!query) {
+        return [];
+    }
+
+    const { data, error } = await supabase
+        .from('produto')
+        .select('*')
+        .ilike('nome', `%${query}%`);
+
+    if (error) {
+        console.error('Erro ao buscar produtos:', error);
+        return [];
+    }
+
+    return (data as Produto[]) || [];
+}
