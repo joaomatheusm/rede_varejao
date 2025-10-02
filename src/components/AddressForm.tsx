@@ -126,9 +126,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
       bounces={false}
     >
       <View style={styles.form}>
-        <Text style={styles.title}>Novo Endereço</Text>
 
-        <Text style={styles.label}>Tipo de endereço</Text>
         <View style={styles.row}>
           {[
             { tipo: "Casa", icon: "home-outline" },
@@ -348,12 +346,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 24,
     textAlign: "center",
-    color: "#333",
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
     color: "#333",
   },
   row: {

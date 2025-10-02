@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,13 +14,41 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddressForm from "../../../../components/AddressForm";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { enderecoService } from "../../../../lib/enderecoService";
+import { Endereco, enderecoService } from "../../../../lib/enderecoService";
 
 const PRIMARY_COLOR = "#FF4D4D";
 
 const AddressScreen = () => {
   const [loading, setLoading] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Endereco | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
+  const params = useLocalSearchParams();
+  const editId = params.editId as string;
+
+  useEffect(() => {
+    if (editId) {
+      loadAddressForEdit();
+    }
+  }, [editId]);
+
+  const loadAddressForEdit = async () => {
+    if (!editId) return;
+
+    setLoading(true);
+    try {
+      const endereco = await enderecoService.buscarEnderecoPorId(
+        parseInt(editId)
+      );
+      setEditingAddress(endereco);
+      setIsEditing(true);
+    } catch (error) {
+      console.error("Erro ao carregar endereço para edição:", error);
+      Alert.alert("Erro", "Não foi possível carregar o endereço para edição.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmitAddress = async (formData: any) => {
     if (!user) {
@@ -27,31 +56,42 @@ const AddressScreen = () => {
       return;
     }
 
-    console.log("Dados do formulário:", formData);
-    console.log("ID do usuário:", user.id);
-    console.log("Email do usuário:", user.email);
-
     setLoading(true);
     try {
-      // Usar o UUID diretamente como string
-      const dadosEndereco = {
-        ...formData,
-        usuario_id: user.id, // Usar UUID diretamente
-      };
+      if (isEditing && editingAddress?.id) {
+        // Editar endereço existente
+        const dadosAtualizados = {
+          ...formData,
+          data_ult_atualizacao: new Date().toISOString(),
+        };
 
-      console.log("Dados para salvar:", dadosEndereco);
+        await enderecoService.atualizarEndereco(
+          editingAddress.id,
+          dadosAtualizados
+        );
 
-      const endereco = await enderecoService.criarEndereco(dadosEndereco);
-
-      Alert.alert("Sucesso", "Endereço cadastrado com sucesso!", [
-        {
-          text: "OK",
-          onPress: () => {
-            // Navegar de volta para o carrinho ou para uma tela de confirmação
-            router.back();
+        Alert.alert("Sucesso", "Endereço atualizado com sucesso!", [
+          {
+            text: "OK",
+            onPress: () => router.back(),
           },
-        },
-      ]);
+        ]);
+      } else {
+        // Criar novo endereço
+        const dadosEndereco = {
+          ...formData,
+          usuario_id: user.id,
+        };
+
+        await enderecoService.criarEndereco(dadosEndereco);
+
+        Alert.alert("Sucesso", "Endereço cadastrado com sucesso!", [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]);
+      }
     } catch (error) {
       console.error("Erro ao salvar endereço:", error);
       Alert.alert(
@@ -67,13 +107,35 @@ const AddressScreen = () => {
     router.back();
   };
 
+  if (loading && isEditing) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.title}>
+            {isEditing ? "Editar Endereço" : "Novo Endereço"}
+          </Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={PRIMARY_COLOR} />
+          <Text style={styles.loadingText}>Carregando endereço...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Endereço de Entrega</Text>
+        <Text style={styles.title}>
+          {isEditing ? "Editar Endereço" : "Novo Endereço"}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -85,7 +147,10 @@ const AddressScreen = () => {
         <AddressForm
           onSubmit={handleSubmitAddress}
           loading={loading}
-          submitButtonText="Salvar e Continuar"
+          submitButtonText={
+            isEditing ? "Atualizar Endereço" : "Salvar e Continuar"
+          }
+          initialData={editingAddress || undefined}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -129,6 +194,16 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
   },
 });
 

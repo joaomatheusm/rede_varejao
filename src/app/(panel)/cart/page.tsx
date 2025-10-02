@@ -26,10 +26,8 @@ const CartScreen = () => {
   } = useCart();
 
   const handleCheckout = () => {
-    // Navegar para a tela de endereço
-    router.push({
-      pathname: "/(panel)/cart/address/page",
-    });
+    // Navegar para a lista de endereços
+    router.push("/(panel)/cart/address/list");
   };
 
   return (

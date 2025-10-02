@@ -52,6 +52,10 @@ function MainLayout() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="(panel)/cart/address/list"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="(panel)/category/[id]"
         options={{ headerShown: false }}
       />
