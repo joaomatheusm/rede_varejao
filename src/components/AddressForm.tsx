@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Endereco } from "../lib/enderecoService";
 
 interface FormData {
   apelido: string;
@@ -25,7 +26,7 @@ interface FormData {
 
 interface AddressFormProps {
   onSubmit: (data: FormData) => Promise<void>;
-  initialData?: Partial<FormData>;
+  initialData?: Partial<Endereco>;
   loading?: boolean;
   submitButtonText?: string;
 }
@@ -51,6 +52,22 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   const [padrao, setPadrao] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
+
+  // Atualizar formData quando initialData mudar (para modo de edição)
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setFormData({
+        apelido: initialData.apelido || "Casa",
+        cep: initialData.cep || "",
+        logradouro: initialData.logradouro || "",
+        numero: initialData.numero || "",
+        complemento: initialData.complemento || "",
+        bairro: initialData.bairro || "",
+        cidade: initialData.cidade || "",
+        estado: initialData.estado || "",
+      });
+    }
+  }, [initialData]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -126,7 +143,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
       bounces={false}
     >
       <View style={styles.form}>
-
         <View style={styles.row}>
           {[
             { tipo: "Casa", icon: "home-outline" },

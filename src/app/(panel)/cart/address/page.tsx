@@ -144,14 +144,17 @@ const AddressScreen = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        <AddressForm
-          onSubmit={handleSubmitAddress}
-          loading={loading}
-          submitButtonText={
-            isEditing ? "Atualizar Endereço" : "Salvar e Continuar"
-          }
-          initialData={editingAddress || undefined}
-        />
+        {/* Só renderiza o formulário após carregar dados de edição */}
+        {(!isEditing || editingAddress) && (
+          <AddressForm
+            onSubmit={handleSubmitAddress}
+            loading={loading}
+            submitButtonText={
+              isEditing ? "Atualizar Endereço" : "Salvar e Continuar"
+            }
+            initialData={editingAddress || undefined}
+          />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
