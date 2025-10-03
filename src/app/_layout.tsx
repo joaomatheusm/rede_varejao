@@ -14,17 +14,17 @@ export default function RootLayout() {
 }
 
 function MainLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, isSigningUp } = useAuth();
 
   useEffect(() => {
-    if (loading) return; // Aguarda carregar a sessão
+    if (loading || isSigningUp) return; // Aguarda carregar a sessão ou finalizar cadastro
 
     if (user) {
       router.replace("/(panel)/home/page");
     } else {
       router.replace("/(auth)/signin/page");
     }
-  }, [user, loading]);
+  }, [user, loading, isSigningUp]);
 
   return (
     // DEFINA TELAS DE NAVEGAÇÃO AQUI
@@ -42,10 +42,27 @@ function MainLayout() {
       />
 
       <Stack.Screen name="(panel)/home/page" options={{ headerShown: false }} />
-      <Stack.Screen name="(panel)/profile/page" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="(panel)/profile/page"
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="(panel)/cart/page" options={{ headerShown: false }} />
-      <Stack.Screen name="(panel)/category/[id]" options={{ headerShown: false }} /> 
-      <Stack.Screen name="(panel)/search/page" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="(panel)/cart/address/page"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="(panel)/cart/address/list"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="(panel)/category/[id]"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="(panel)/search/page"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

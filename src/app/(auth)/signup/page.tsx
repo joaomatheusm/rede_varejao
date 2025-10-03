@@ -15,9 +15,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../../contexts/AuthContext";
 import { supabase } from "../../../lib/supabase";
 
 const SignUpScreen = () => {
+  const { setIsSigningUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,39 +36,52 @@ const SignUpScreen = () => {
     }
 
     setLoading(true);
+    setIsSigningUp(true); // Bloquear redirecionamentos automáticos
 
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: {
-          name: name,
+    try {
+      // Garantir que não há sessão ativa antes do cadastro
+      await supabase.auth.signOut();
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            name: name,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      Alert.alert("Erro ao cadastrar", error.message);
+      if (error) {
+        Alert.alert("Erro ao cadastrar", error.message);
+        setLoading(false);
+        setIsSigningUp(false);
+        return;
+      }
+
+      // Fazer logout novamente para garantir que não auto-logue
+      await supabase.auth.signOut();
+
       setLoading(false);
-      return;
+      setIsSigningUp(false); // Liberar redirecionamentos
+
+      // Redirecionar imediatamente sem Alert para evitar flash
+      router.replace("/(auth)/signin/page");
+
+      // Mostrar toast ou notificação de sucesso após redirecionar
+      setTimeout(() => {
+        Alert.alert(
+          "Cadastro realizado!",
+          "Sua conta foi criada com sucesso. Faça login para continuar."
+        );
+      }, 500);
+
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      Alert.alert("Erro", "Ocorreu um erro inesperado. Tente novamente.");
+      setLoading(false);
+      setIsSigningUp(false);
     }
-
-    // Fazer logout imediatamente após cadastro para não auto-logar
-    await supabase.auth.signOut();
-
-    setLoading(false);
-
-    // Mostrar mensagem de sucesso
-    Alert.alert(
-      "Cadastro realizado!",
-      "Sua conta foi criada com sucesso. Faça login para continuar.",
-      [
-        {
-          text: "OK",
-          onPress: () => router.replace("/(auth)/signin/page"),
-        },
-      ]
-    );
   }
 
   const handleLogin = () => {
