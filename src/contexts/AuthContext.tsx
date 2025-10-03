@@ -6,6 +6,8 @@ interface AuthContextProps {
   user: User | null;
   setAuth: (authUser: User | null) => void;
   loading: boolean;
+  isSigningUp: boolean;
+  setIsSigningUp: (isSigningUp: boolean) => void;
 }
 
 const AuthContext = createContext({} as AuthContextProps);
@@ -13,6 +15,7 @@ const AuthContext = createContext({} as AuthContextProps);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   function setAuth(authUser: User | null) {
     setUser(authUser);
@@ -42,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setAuth, loading }}>
+    <AuthContext.Provider value={{ user, setAuth, loading, isSigningUp, setIsSigningUp }}>
       {children}
     </AuthContext.Provider>
   );
