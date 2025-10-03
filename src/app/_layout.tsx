@@ -59,6 +59,10 @@ function MainLayout() {
         name="(panel)/category/[id]"
         options={{ headerShown: false }}
       />
+      <Stack.Screen 
+        name="(panel)/search/page" 
+        options={{ headerShown: false }} 
+      />
     </Stack>
   );
 }

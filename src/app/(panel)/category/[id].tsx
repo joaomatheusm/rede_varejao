@@ -17,7 +17,7 @@ import {
   fetchProdutosPorCategoria,
   Produto,
 } from "../../../lib/produtoService";
-import { styles } from "./styles";
+import { styles } from "../../../styles/category";
 
 const PRIMARY_COLOR = "#FF4757";
 
