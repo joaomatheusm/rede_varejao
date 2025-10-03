@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -52,6 +53,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   const [padrao, setPadrao] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [locationLoading, setLocationLoading] = useState(false);
 
   // Atualizar formData quando initialData mudar (para modo de edição)
   useEffect(() => {
@@ -134,6 +136,67 @@ const AddressForm: React.FC<AddressFormProps> = ({
     return `${numericValue.slice(0, 5)}-${numericValue.slice(5, 8)}`;
   };
 
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+
+    try {
+      // Solicitar permissão de localização
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão Negada",
+          "É necessário permitir o acesso à localização para usar esta funcionalidade."
+        );
+        return;
+      }
+
+      // Obter localização atual
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      // Fazer geocoding reverso para obter endereço
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+
+        // Preencher campos do formulário com dados da localização
+        setFormData((prev) => ({
+          ...prev,
+          logradouro: address.street || "",
+          numero: address.streetNumber || "",
+          bairro: address.district || address.subregion || "",
+          cidade: address.city || "",
+          estado: address.region || "",
+          cep: address.postalCode || "",
+        }));
+
+        Alert.alert(
+          "Localização Obtida",
+          "Os campos foram preenchidos com base na sua localização atual!"
+        );
+      } else {
+        Alert.alert(
+          "Erro",
+          "Não foi possível obter informações de endereço para esta localização."
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao obter localização:", error);
+      Alert.alert(
+        "Erro",
+        "Não foi possível obter sua localização. Verifique se o GPS está ativado."
+      );
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
   return (
     <ScrollView
       style={styles.scrollView}
@@ -143,6 +206,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
       bounces={false}
     >
       <View style={styles.form}>
+        <Text style={styles.label}>Tipo de endereço</Text>
         <View style={styles.row}>
           {[
             { tipo: "Casa", icon: "home-outline" },
@@ -174,6 +238,36 @@ const AddressForm: React.FC<AddressFormProps> = ({
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Botão para usar localização atual */}
+        <TouchableOpacity
+          style={styles.locationButton}
+          onPress={getCurrentLocation}
+          disabled={locationLoading}
+        >
+          <Ionicons
+            name="location"
+            size={20}
+            color={locationLoading ? "#999" : PRIMARY_COLOR}
+          />
+          <Text
+            style={[
+              styles.locationButtonText,
+              locationLoading && styles.locationButtonTextDisabled,
+            ]}
+          >
+            {locationLoading
+              ? "Obtendo localização..."
+              : "Usar Localização Atual"}
+          </Text>
+          {locationLoading && (
+            <ActivityIndicator
+              size="small"
+              color="#999"
+              style={styles.locationLoader}
+            />
+          )}
+        </TouchableOpacity>
 
         <View style={styles.inputContainer}>
           <Ionicons
@@ -502,6 +596,37 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+    color: "#333",
+  },
+  locationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f8f9fa",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    marginTop: 15,
+    marginBottom: 20,
+  },
+  locationButtonText: {
+    color: PRIMARY_COLOR,
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  locationButtonTextDisabled: {
+    color: "#999",
+  },
+  locationLoader: {
+    marginLeft: 8,
   },
 });
 
