@@ -82,9 +82,23 @@ export default function TabBar() {
       </TouchableOpacity>
 
       {/* Tab Favoritos */}
-      <TouchableOpacity style={styles.tabItem}>
-        <Ionicons name="heart-outline" size={24} color="#999" />
-        <Text style={styles.tabLabel}>Favoritos</Text>
+      <TouchableOpacity
+        style={styles.tabItem}
+        onPress={() => router.push("/(panel)/favorites/page")}
+      >
+        <Ionicons
+          name={pathname.includes("/favorites") ? "heart" : "heart-outline"}
+          size={24}
+          color={pathname.includes("/favorites") ? PRIMARY_COLOR : "#999"}
+        />
+        <Text
+          style={[
+            styles.tabLabel,
+            { color: pathname.includes("/favorites") ? PRIMARY_COLOR : "#999" },
+          ]}
+        >
+          Favoritos
+        </Text>
       </TouchableOpacity>
 
       {/* Tab Perfil */}
