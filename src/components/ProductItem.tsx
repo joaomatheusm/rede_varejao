@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoritesContext';
 import { Produto } from '../lib/produtoService';
 
 const PRIMARY_COLOR = "#FF4757";
@@ -13,15 +14,26 @@ type ProductItemProps = {
 
 const ProductItem = ({ item, variant = 'verticalGrid' }: ProductItemProps) => {
     const cardStyle = variant === 'horizontalScroll' ? styles.horizontalCard : styles.verticalCard;
-
     const { addToCart, loading } = useCart();
+    const { isFavorited, toggleFavorite, loading: favLoading } = useFavorites();
 
     const handleAddToCart = async () => {
         await addToCart(item);
     };
 
+    const handleToggleFavorite = () => {
+        toggleFavorite(item);
+    };
+
     return (
         <TouchableOpacity style={[styles.baseCard, cardStyle]}>
+            <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
+                <Ionicons 
+                    name={isFavorited(item.id) ? 'heart' : 'heart-outline'} 
+                    size={24} 
+                    color={isFavorited(item.id) ? PRIMARY_COLOR : '#AAA'} 
+                />
+            </TouchableOpacity>
             {item.is_oferta && item.preco_oferta !== null && (
                 <View style={styles.discountBadge}>
                     <Text style={styles.discountText}>OFERTA</Text>
@@ -134,6 +146,13 @@ const styles = StyleSheet.create({
         color: '#FFF', 
         fontSize: 10, 
         fontWeight: 'bold', 
+    },
+    favoriteButton: {
+        position: 'absolute',
+        top: 8,
+        left: 8,
+        zIndex: 2,
+        padding: 4,
     },
 });
 
