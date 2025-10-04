@@ -46,6 +46,15 @@ export const styles = StyleSheet.create({
     },
     listContainer: {
         paddingHorizontal: 12,
-        paddingBottom: 20,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: '30%',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#AAA',
     },
 });

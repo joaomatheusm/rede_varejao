@@ -50,7 +50,6 @@ const HomeScreen = () => {
           {/* Header */}
           <View style={styles.header}>
             <Image
-              source={{ uri: "" }}
               style={styles.logo}
               resizeMode="contain"
             />
