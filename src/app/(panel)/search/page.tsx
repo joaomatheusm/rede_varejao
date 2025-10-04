@@ -60,7 +60,7 @@ const SearchScreen = () => {
                             </Text>
                         </View>
                     }
-                    contentContainerStyle={{ paddingHorizontal: 8 }}
+                    contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 100 }}
                 />
             )}
 
