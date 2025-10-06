@@ -22,7 +22,7 @@ import { Endereco, enderecoService } from "../../../../lib/enderecoService";
 const PRIMARY_COLOR = "#FF4757";
 const SECONDARY_COLOR = "#FF9800";
 
-const WHATSAPP_NUMBER = "5522997636108";
+const WHATSAPP_NUMBER = "5521997570140";
 
 // Componente para exibir item do carrinho em modo de leitura
 const ReviewCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
