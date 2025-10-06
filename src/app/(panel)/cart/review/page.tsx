@@ -6,6 +6,7 @@ import {
   Alert,
   FlatList,
   Image,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +21,8 @@ import { Endereco, enderecoService } from "../../../../lib/enderecoService";
 
 const PRIMARY_COLOR = "#FF4757";
 const SECONDARY_COLOR = "#FF9800";
+
+const WHATSAPP_NUMBER = "5522997636108";
 
 // Componente para exibir item do carrinho em modo de leitura
 const ReviewCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
@@ -95,49 +98,123 @@ const ReviewScreen: React.FC = () => {
     router.push("/(panel)/cart/address/list");
   };
 
+  const formatWhatsAppMessage = () => {
+    const orderDate = new Date().toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    let message = `🛒 *NOVO PEDIDO* 🛒\n\n`;
+    message += `📅 *Data:* ${orderDate}\n`;
+    message += `👤 *Cliente:* ${user?.email || "Não informado"}\n\n`;
+
+    // Produtos
+    message += `📦 *PRODUTOS:*\n`;
+    items.forEach((item, index) => {
+      const itemPrice =
+        item.produto.is_oferta && item.produto.preco_oferta
+          ? item.produto.preco_oferta
+          : item.produto.preco;
+
+      message += `${index + 1}. ${item.produto.nome}\n`;
+      message += `   • Qtd: ${item.quantidade}\n`;
+      message += `   • Preço unit.: R$ ${itemPrice.toFixed(2)}\n`;
+      message += `   • Subtotal: R$ ${(itemPrice * item.quantidade).toFixed(
+        2
+      )}\n\n`;
+    });
+
+    // Endereço de entrega
+    if (selectedAddress) {
+      message += `🏠 *ENDEREÇO DE ENTREGA:*\n`;
+      message += `${selectedAddress.apelido}\n`;
+      message += `${selectedAddress.logradouro}, ${selectedAddress.numero}\n`;
+      if (selectedAddress.complemento) {
+        message += `${selectedAddress.complemento}\n`;
+      }
+      message += `${selectedAddress.bairro}, ${selectedAddress.cidade} - ${selectedAddress.estado}\n`;
+      message += `CEP: ${selectedAddress.cep}\n\n`;
+    }
+
+    // Resumo financeiro
+    message += `💰 *RESUMO DO PEDIDO:*\n`;
+    message += `• Subtotal: R$ ${subtotal.toFixed(2)}\n`;
+    message += `• Taxa de entrega: R$ ${deliveryFee.toFixed(2)}\n`;
+    message += `• *TOTAL: R$ ${total.toFixed(2)}*\n\n`;
+
+    // Tempo estimado
+    message += `⏰ *Tempo estimado de entrega:* ${estimatedTime}\n\n`;
+
+    message += `💳 *Forma de pagamento:* A definir\n\n`;
+    message += `✅ Aguardando confirmação do pedido!`;
+
+    return encodeURIComponent(message);
+  };
+
   const handleFinalizePedido = () => {
+    if (!selectedAddress) {
+      Alert.alert("Atenção", "Selecione um endereço para continuar.");
+      return;
+    }
+
     Alert.alert(
       "Finalizar Pedido",
-      `Total: R$ ${total.toFixed(2)}\nDeseja prosseguir para o pagamento?`,
+      `Total: R$ ${total.toFixed(
+        2
+      )}\n\nSeu pedido será enviado via WhatsApp para confirmação.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text: "Confirmar",
-          onPress: () => proceedToPayment(),
+          text: "Enviar por WhatsApp",
+          onPress: () => sendToWhatsApp(),
         },
       ]
     );
   };
 
-  const proceedToPayment = async () => {
+  const sendToWhatsApp = async () => {
     setFinalizing(true);
 
     try {
-      // Simular processamento do pedido
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const message = formatWhatsAppMessage();
+      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
 
-      // Aqui você implementaria a lógica de:
-      // 1. Salvar pedido no banco
-      // 2. Navegar para tela de pagamento
-      // 3. Ou finalizar se for pagamento na entrega
+      // Verificar se o WhatsApp pode ser aberto
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
 
-      Alert.alert(
-        "Pedido Realizado!",
-        "Seu pedido foi confirmado e está sendo preparado.",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              clearCart();
-              router.replace("/(panel)/home/page");
-            },
-          },
-        ]
-      );
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+
+        // Aguardar um pouco antes de mostrar o sucesso
+        setTimeout(() => {
+          Alert.alert(
+            "Pedido Enviado!",
+            "Seu pedido foi enviado via WhatsApp. Aguarde a confirmação!",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  clearCart();
+                  router.replace("/(panel)/home/page");
+                },
+              },
+            ]
+          );
+        }, 1000);
+      } else {
+        Alert.alert(
+          "WhatsApp não encontrado",
+          "Por favor, instale o WhatsApp ou entre em contato pelo telefone."
+        );
+      }
     } catch (error) {
+      console.error("Erro ao abrir WhatsApp:", error);
       Alert.alert(
         "Erro",
-        "Não foi possível finalizar o pedido. Tente novamente."
+        "Não foi possível abrir o WhatsApp. Tente novamente."
       );
     } finally {
       setFinalizing(false);
@@ -322,7 +399,13 @@ const ReviewScreen: React.FC = () => {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Text style={styles.finalizeButtonText}>Finalizar Pedido</Text>
+              <Ionicons
+                name="logo-whatsapp"
+                size={20}
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.finalizeButtonText}>Enviar por WhatsApp</Text>
               <Text style={styles.finalizeButtonPrice}>
                 R$ {total.toFixed(2)}
               </Text>
