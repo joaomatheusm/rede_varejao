@@ -69,7 +69,6 @@ const AddressListScreen: React.FC = () => {
   };
 
   const handleEditAddress = (endereco: Endereco) => {
-    // Navegar para tela de edição (implementar depois)
     router.push({
       pathname: "/(panel)/cart/address/page",
       params: { editId: endereco.id?.toString() },
@@ -101,12 +100,8 @@ const AddressListScreen: React.FC = () => {
       return;
     }
 
-    // Aqui você pode navegar para a próxima tela do checkout
-    Alert.alert(
-      "Endereço selecionado",
-      `Endereço: ${selectedAddress.apelido}\n${selectedAddress.logradouro}, ${selectedAddress.numero}`,
-      [{ text: "OK", onPress: () => router.back() }]
-    );
+    // Navegar para a tela de revisão do pedido
+    router.push("/(panel)/cart/review/page");
   };
 
   const renderAddressItem = ({ item }: { item: Endereco }) => (
