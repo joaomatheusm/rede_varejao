@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { DeliveryCheck, deliveryService } from "../lib/deliveryService";
 import { Endereco } from "../lib/enderecoService";
 
 interface FormData {
@@ -26,10 +27,11 @@ interface FormData {
 }
 
 interface AddressFormProps {
-  onSubmit: (data: FormData) => Promise<void>;
+  onSubmit: (data: FormData, deliveryCheck?: DeliveryCheck) => Promise<void>;
   initialData?: Partial<Endereco>;
   loading?: boolean;
   submitButtonText?: string;
+  checkDelivery?: boolean; // Nova prop para habilitar verificação de entrega
 }
 
 const PRIMARY_COLOR = "#FF4D4D";
@@ -39,6 +41,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
   initialData = {},
   loading = false,
   submitButtonText = "Salvar Endereço",
+  checkDelivery = false,
 }) => {
   const [formData, setFormData] = useState<FormData>({
     apelido: initialData.apelido || "Casa",
@@ -54,6 +57,10 @@ const AddressForm: React.FC<AddressFormProps> = ({
   const [padrao, setPadrao] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [locationLoading, setLocationLoading] = useState(false);
+  const [deliveryCheck, setDeliveryCheck] = useState<DeliveryCheck | null>(
+    null
+  );
+  const [checkingDelivery, setCheckingDelivery] = useState(false);
 
   // Atualizar formData quando initialData mudar (para modo de edição)
   useEffect(() => {
@@ -110,8 +117,14 @@ const AddressForm: React.FC<AddressFormProps> = ({
       return;
     }
 
+    // Se checkDelivery estiver habilitado, verificar antes de submeter
+    if (checkDelivery) {
+      await checkDeliveryAvailability();
+      return; // A verificação chamará o submit se aprovado
+    }
+
     try {
-      await onSubmit(formData);
+      await onSubmit(formData, deliveryCheck || undefined);
     } catch (error) {
       console.error("Erro ao submeter formulário:", error);
       Alert.alert(
@@ -125,6 +138,85 @@ const AddressForm: React.FC<AddressFormProps> = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+    // Limpar verificação de entrega quando dados do endereço mudarem
+    if (
+      deliveryCheck &&
+      ["cep", "logradouro", "numero", "bairro", "cidade", "estado"].includes(
+        field
+      )
+    ) {
+      setDeliveryCheck(null);
+    }
+  };
+
+  const checkDeliveryAvailability = async () => {
+    setCheckingDelivery(true);
+    setDeliveryCheck(null);
+
+    try {
+      // Montar endereço completo para verificação
+      const fullAddress = `${formData.logradouro}, ${formData.numero}, ${formData.bairro}, ${formData.cidade}, ${formData.estado}, ${formData.cep}`;
+
+      const result = await deliveryService.checkDeliveryAvailability(
+        fullAddress
+      );
+      setDeliveryCheck(result);
+
+      if (result.available) {
+        // Endereço dentro do raio, mostrar confirmação e permitir prosseguir
+        Alert.alert("Entrega Disponível! ✅", result.message, [
+          {
+            text: "Continuar",
+            style: "default",
+            onPress: async () => {
+              try {
+                await onSubmit(formData, result);
+              } catch (error) {
+                console.error("Erro ao submeter formulário:", error);
+                Alert.alert(
+                  "Erro",
+                  "Não foi possível salvar o endereço. Tente novamente."
+                );
+              }
+            },
+          },
+          {
+            text: "Verificar Novamente",
+            style: "cancel",
+          },
+        ]);
+      } else {
+        // Endereço fora do raio, mostrar erro
+        Alert.alert("Área não atendida", result.message, [
+          {
+            text: "Entendi",
+            style: "default",
+          },
+          {
+            text: "Alterar Endereço",
+            style: "cancel",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Erro ao verificar entrega:", error);
+      Alert.alert(
+        "Erro na Verificação",
+        "Não foi possível verificar a disponibilidade de entrega. Verifique sua conexão e tente novamente.",
+        [
+          {
+            text: "Tentar Novamente",
+            onPress: () => checkDeliveryAvailability(),
+          },
+          {
+            text: "Cancelar",
+            style: "cancel",
+          },
+        ]
+      );
+    } finally {
+      setCheckingDelivery(false);
     }
   };
 
@@ -420,16 +512,54 @@ const AddressForm: React.FC<AddressFormProps> = ({
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton,
+            (loading || checkingDelivery) && styles.submitButtonDisabled,
+          ]}
           onPress={handleSubmit}
-          disabled={loading}
+          disabled={loading || checkingDelivery}
         >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
+          {loading || checkingDelivery ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#FFF" />
+              <Text style={styles.submitButtonText}>
+                {checkingDelivery ? "Verificando entrega..." : "Salvando..."}
+              </Text>
+            </View>
           ) : (
-            <Text style={styles.submitButtonText}>{submitButtonText}</Text>
+            <Text style={styles.submitButtonText}>
+              {checkDelivery ? "Verificar e Continuar" : submitButtonText}
+            </Text>
           )}
         </TouchableOpacity>
+
+        {/* Status da verificação de entrega */}
+        {deliveryCheck && (
+          <View
+            style={[
+              styles.deliveryStatus,
+              deliveryCheck.available
+                ? styles.deliverySuccess
+                : styles.deliveryError,
+            ]}
+          >
+            <Text
+              style={[
+                styles.deliveryStatusText,
+                deliveryCheck.available
+                  ? styles.deliverySuccessText
+                  : styles.deliveryErrorText,
+              ]}
+            >
+              {deliveryCheck.message}
+            </Text>
+            {deliveryCheck.distance && (
+              <Text style={styles.deliveryDistance}>
+                Distância do estabelecimento: {deliveryCheck.distance}km
+              </Text>
+            )}
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -627,6 +757,41 @@ const styles = StyleSheet.create({
   },
   locationLoader: {
     marginLeft: 8,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deliveryStatus: {
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  deliverySuccess: {
+    backgroundColor: "#f0f9ff",
+    borderColor: "#22c55e",
+  },
+  deliveryError: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#ef4444",
+  },
+  deliveryStatusText: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+  deliverySuccessText: {
+    color: "#16a34a",
+  },
+  deliveryErrorText: {
+    color: "#dc2626",
+  },
+  deliveryDistance: {
+    fontSize: 12,
+    color: "#6b7280",
+    fontStyle: "italic",
   },
 });
 

@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddressForm from "../../../../components/AddressForm";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { DeliveryCheck } from "../../../../lib/deliveryService";
 import { Endereco, enderecoService } from "../../../../lib/enderecoService";
 
 const PRIMARY_COLOR = "#FF4D4D";
@@ -50,9 +51,21 @@ const AddressScreen = () => {
     }
   };
 
-  const handleSubmitAddress = async (formData: any) => {
+  const handleSubmitAddress = async (
+    formData: any,
+    deliveryCheck?: DeliveryCheck
+  ) => {
     if (!user) {
       Alert.alert("Erro", "Usuário não autenticado");
+      return;
+    }
+
+    // Se deliveryCheck for fornecido e não estiver disponível, não permitir continuar
+    if (deliveryCheck && !deliveryCheck.available) {
+      Alert.alert(
+        "Área não atendida",
+        "Este endereço está fora da nossa área de entrega."
+      );
       return;
     }
 
@@ -85,7 +98,12 @@ const AddressScreen = () => {
 
         await enderecoService.criarEndereco(dadosEndereco);
 
-        Alert.alert("Sucesso", "Endereço cadastrado com sucesso!", [
+        const successMessage =
+          deliveryCheck && deliveryCheck.available
+            ? `Endereço cadastrado com sucesso!\n✅ Entrega confirmada (${deliveryCheck.distance}km)`
+            : "Endereço cadastrado com sucesso!";
+
+        Alert.alert("Sucesso", successMessage, [
           {
             text: "OK",
             onPress: () => router.back(),
@@ -153,6 +171,7 @@ const AddressScreen = () => {
               isEditing ? "Atualizar Endereço" : "Salvar e Continuar"
             }
             initialData={editingAddress || undefined}
+            checkDelivery={!isEditing} // Só verificar entrega para novos endereços
           />
         )}
       </KeyboardAvoidingView>

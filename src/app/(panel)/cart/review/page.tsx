@@ -62,7 +62,7 @@ const ReviewScreen: React.FC = () => {
 
   // Valores calculados
   const subtotal = totalPrice;
-  const deliveryFee = 5.0; // Taxa fixa de entrega - pode ser calculada baseada no endereço
+  const deliveryFee = 8.0; // Taxa fixa de entrega
   const total = subtotal + deliveryFee;
   const estimatedTime = "45-60 min";
 
@@ -74,8 +74,7 @@ const ReviewScreen: React.FC = () => {
     if (!user?.id) return;
 
     try {
-      // Por enquanto, vamos pegar o primeiro endereço do usuário
-      // Em uma implementação real, você passaria o endereço selecionado via parâmetros
+
       const enderecos = await enderecoService.buscarEnderecosPorUsuario(
         user.id
       );

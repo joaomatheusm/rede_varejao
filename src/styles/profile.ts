@@ -3,7 +3,6 @@ import { Dimensions, StyleSheet } from "react-native";
 const { width } = Dimensions.get('window');
 const PRIMARY_COLOR = "#4CAF50";
 const SECONDARY_COLOR = "#FF9800";
-const ACCENT_COLOR = "#2196F3";
 
 export const styles = StyleSheet.create({
     container: {
