@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     color: "#666",
-    fontSize: 16, // Aumentado de 14 para 16
+    fontSize: 16, 
     fontWeight: "500",
   },
   signUpLink: {
