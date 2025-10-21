@@ -36,3 +36,21 @@ export async function updateQuantity(cartItemId: number, newQuantity: number) {
     });
     if (error) throw error;
 }
+
+export async function createOrderFromCart(
+  enderecoId: number, 
+  metodoPagamento: string, 
+  taxaEntrega: number
+): Promise<number> {
+    const { data, error } = await supabase.rpc('criar_pedido_do_carrinho', {
+        p_endereco_id: enderecoId,
+        p_metodo_pagamento: metodoPagamento,
+        p_taxa_entrega: taxaEntrega
+    });
+
+    if (error) {
+        console.error("Erro ao criar pedido:", error);
+        throw new Error(error.message);
+    }
+    return data;
+}

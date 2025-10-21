@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
-  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,9 +21,6 @@ import { Endereco, enderecoService } from "../../../../lib/enderecoService";
 const PRIMARY_COLOR = "#FF4757";
 const SECONDARY_COLOR = "#FF9800";
 
-const WHATSAPP_NUMBER = "5521997570140";
-
-// Componente para exibir item do carrinho em modo de leitura
 const ReviewCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
   const itemPrice =
     item.produto.is_oferta && item.produto.preco_oferta
@@ -41,12 +37,12 @@ const ReviewCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
         <Text style={styles.reviewItemName} numberOfLines={2}>
           {item.produto.nome}
         </Text>
-        <Text style={styles.reviewItemPrice}>R$ {itemPrice.toFixed(2)}</Text>
+        <Text style={styles.reviewItemPrice}>R$ {itemPrice.toFixed(2).replace('.', ',')}</Text>
         <Text style={styles.reviewItemQuantity}>Qtd: {item.quantidade}</Text>
       </View>
       <View style={styles.reviewItemTotal}>
         <Text style={styles.reviewItemTotalText}>
-          R$ {(itemPrice * item.quantidade).toFixed(2)}
+          R$ {(itemPrice * item.quantidade).toFixed(2).replace('.', ',')}
         </Text>
       </View>
     </View>
@@ -55,39 +51,43 @@ const ReviewCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
 
 const ReviewScreen: React.FC = () => {
   const { user } = useAuth();
-  const { items, totalItems, totalPrice, clearCart } = useCart();
+  const { items, totalItems, totalPrice, loading, createOrder } = useCart();
+  
+  const { enderecoId } = useLocalSearchParams<{ enderecoId: string }>();
+
   const [selectedAddress, setSelectedAddress] = useState<Endereco | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingAddress, setLoadingAddress] = useState(true);
   const [finalizing, setFinalizing] = useState(false);
 
-  // Valores calculados
   const subtotal = totalPrice;
-  const deliveryFee = 8.0; // Taxa fixa de entrega
+  const deliveryFee = 8.0;
   const total = subtotal + deliveryFee;
   const estimatedTime = "45-60 min";
 
   useEffect(() => {
-    loadSelectedAddress();
-  }, []);
-
-  const loadSelectedAddress = async () => {
-    if (!user?.id) return;
-
-    try {
-
-      const enderecos = await enderecoService.buscarEnderecosPorUsuario(
-        user.id
-      );
-      if (enderecos.length > 0) {
-        setSelectedAddress(enderecos[0]);
+    const loadSelectedAddress = async () => {
+      if (!enderecoId) {
+        Alert.alert("Erro", "Nenhum endereço foi selecionado.", [{ text: "OK", onPress: () => router.back() }]);
+        return;
       }
-    } catch (error) {
-      console.error("Erro ao carregar endereço:", error);
-      Alert.alert("Erro", "Não foi possível carregar o endereço de entrega.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLoadingAddress(true);
+      try {
+        const endereco = await enderecoService.buscarEnderecoPorId(parseInt(enderecoId, 10));
+        if (endereco) {
+          setSelectedAddress(endereco);
+        } else {
+          throw new Error('Endereço não encontrado');
+        }
+      } catch (error) {
+        console.error("Erro ao carregar endereço:", error);
+        Alert.alert("Erro", "Não foi possível carregar o endereço de entrega.", [{ text: "OK", onPress: () => router.back() }]);
+      } finally {
+        setLoadingAddress(false);
+      }
+    };
+    
+    loadSelectedAddress();
+  }, [enderecoId]);
 
   const handleGoBack = () => {
     router.back();
@@ -97,124 +97,53 @@ const ReviewScreen: React.FC = () => {
     router.push("/(panel)/cart/address/list");
   };
 
-  const formatWhatsAppMessage = () => {
-    const orderDate = new Date().toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    let message = `🛒 *NOVO PEDIDO* 🛒\n\n`;
-    message += `📅 *Data:* ${orderDate}\n`;
-    message += `👤 *Cliente:* ${user?.email || "Não informado"}\n\n`;
-
-    // Produtos
-    message += `📦 *PRODUTOS:*\n`;
-    items.forEach((item, index) => {
-      const itemPrice =
-        item.produto.is_oferta && item.produto.preco_oferta
-          ? item.produto.preco_oferta
-          : item.produto.preco;
-
-      message += `${index + 1}. ${item.produto.nome}\n`;
-      message += `   • Qtd: ${item.quantidade}\n`;
-      message += `   • Preço unit.: R$ ${itemPrice.toFixed(2)}\n`;
-      message += `   • Subtotal: R$ ${(itemPrice * item.quantidade).toFixed(
-        2
-      )}\n\n`;
-    });
-
-    // Endereço de entrega
-    if (selectedAddress) {
-      message += `🏠 *ENDEREÇO DE ENTREGA:*\n`;
-      message += `${selectedAddress.apelido}\n`;
-      message += `${selectedAddress.logradouro}, ${selectedAddress.numero}\n`;
-      if (selectedAddress.complemento) {
-        message += `${selectedAddress.complemento}\n`;
-      }
-      message += `${selectedAddress.bairro}, ${selectedAddress.cidade} - ${selectedAddress.estado}\n`;
-      message += `CEP: ${selectedAddress.cep}\n\n`;
-    }
-
-    // Resumo financeiro
-    message += `💰 *RESUMO DO PEDIDO:*\n`;
-    message += `• Subtotal: R$ ${subtotal.toFixed(2)}\n`;
-    message += `• Taxa de entrega: R$ ${deliveryFee.toFixed(2)}\n`;
-    message += `• *TOTAL: R$ ${total.toFixed(2)}*\n\n`;
-
-    // Tempo estimado
-    message += `⏰ *Tempo estimado de entrega:* ${estimatedTime}\n\n`;
-
-    message += `💳 *Forma de pagamento:* A definir\n\n`;
-    message += `✅ Aguardando confirmação do pedido!`;
-
-    return encodeURIComponent(message);
-  };
-
   const handleFinalizePedido = () => {
     if (!selectedAddress) {
-      Alert.alert("Atenção", "Selecione um endereço para continuar.");
+      Alert.alert("Atenção", "Endereço não selecionado.");
       return;
     }
 
     Alert.alert(
-      "Finalizar Pedido",
-      `Total: R$ ${total.toFixed(
-        2
-      )}\n\nSeu pedido será enviado via WhatsApp para confirmação.`,
+      "Confirmar Pedido",
+      `Total: R$ ${total.toFixed(2).replace('.', ',')}\n\nForma de Pagamento: Pagar na Entrega`,
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text: "Enviar por WhatsApp",
-          onPress: () => sendToWhatsApp(),
+          text: "Confirmar",
+          onPress: () => confirmAndCreateOrder(),
         },
       ]
     );
   };
 
-  const sendToWhatsApp = async () => {
+  const confirmAndCreateOrder = async () => {
     setFinalizing(true);
-
     try {
-      const message = formatWhatsAppMessage();
-      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+      const metodoPagamento = "Pagar na Entrega";
+      
+      const newOrderId = await createOrder(
+        selectedAddress!.id!, 
+        metodoPagamento, 
+        deliveryFee
+      );
 
-      // Verificar se o WhatsApp pode ser aberto
-      const canOpen = await Linking.canOpenURL(whatsappUrl);
-
-      if (canOpen) {
-        await Linking.openURL(whatsappUrl);
-
-        // Aguardar um pouco antes de mostrar o sucesso
-        setTimeout(() => {
-          Alert.alert(
-            "Pedido Enviado!",
-            "Seu pedido foi enviado via WhatsApp. Aguarde a confirmação!",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  clearCart();
-                  router.replace("/(panel)/home/page");
-                },
-              },
-            ]
-          );
-        }, 1000);
-      } else {
+      if (newOrderId) {
         Alert.alert(
-          "WhatsApp não encontrado",
-          "Por favor, instale o WhatsApp ou entre em contato pelo telefone."
+          "Pedido Confirmado!",
+          `Seu pedido #${newOrderId} foi recebido e já está sendo preparado.`,
+          [
+            {
+              text: "OK",
+              onPress: () => router.replace("/(panel)/home/page"),
+            },
+          ]
         );
+      } else {
+        throw new Error("Não foi possível criar o pedido.");
       }
     } catch (error) {
-      console.error("Erro ao abrir WhatsApp:", error);
-      Alert.alert(
-        "Erro",
-        "Não foi possível abrir o WhatsApp. Tente novamente."
-      );
+      console.error("Erro ao finalizar pedido:", error);
+      Alert.alert("Erro", `Não foi possível finalizar seu pedido. ${error instanceof Error ? error.message : ''}`);
     } finally {
       setFinalizing(false);
     }
@@ -224,7 +153,7 @@ const ReviewScreen: React.FC = () => {
     <ReviewCartItem item={item} />
   );
 
-  if (loading) {
+  if (loadingAddress || (loading && items.length === 0)) {
     return (
       <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
         <View style={styles.header}>
@@ -242,7 +171,7 @@ const ReviewScreen: React.FC = () => {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !loading) {
     return (
       <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
         <View style={styles.header}>
@@ -256,7 +185,7 @@ const ReviewScreen: React.FC = () => {
           <Ionicons name="cart-outline" size={64} color="#ccc" />
           <Text style={styles.emptyTitle}>Carrinho Vazio</Text>
           <Text style={styles.emptySubtitle}>
-            Adicione produtos ao carrinho para continuar
+            Seu pedido foi finalizado ou seu carrinho está vazio.
           </Text>
           <TouchableOpacity
             style={styles.shopButton}
@@ -288,7 +217,6 @@ const ReviewScreen: React.FC = () => {
               Produtos ({totalItems} itens)
             </Text>
           </View>
-
           <View style={styles.productsContainer}>
             <FlatList
               data={items}
@@ -306,36 +234,20 @@ const ReviewScreen: React.FC = () => {
             <Ionicons name="location" size={20} color={PRIMARY_COLOR} />
             <Text style={styles.sectionTitle}>Endereço de Entrega</Text>
           </View>
-
           {selectedAddress ? (
             <View style={styles.addressContainer}>
               <View style={styles.addressInfo}>
-                <Text style={styles.addressLabel}>
-                  {selectedAddress.apelido}
-                </Text>
-                <Text style={styles.addressText}>
-                  {selectedAddress.logradouro}, {selectedAddress.numero}
-                </Text>
-                <Text style={styles.addressSubtext}>
-                  {selectedAddress.bairro}, {selectedAddress.cidade} -{" "}
-                  {selectedAddress.estado}
-                </Text>
-                <Text style={styles.addressSubtext}>
-                  CEP: {selectedAddress.cep}
-                </Text>
+                <Text style={styles.addressLabel}>{selectedAddress.apelido}</Text>
+                <Text style={styles.addressText}>{selectedAddress.logradouro}, {selectedAddress.numero}</Text>
+                <Text style={styles.addressSubtext}>{selectedAddress.bairro}, {selectedAddress.cidade} - {selectedAddress.estado}</Text>
+                <Text style={styles.addressSubtext}>CEP: {selectedAddress.cep}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.changeButton}
-                onPress={handleChangeAddress}
-              >
+              <TouchableOpacity style={styles.changeButton} onPress={handleChangeAddress}>
                 <Text style={styles.changeButtonText}>Alterar</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity
-              style={styles.addAddressButton}
-              onPress={handleChangeAddress}
-            >
+            <TouchableOpacity style={styles.addAddressButton} onPress={handleChangeAddress}>
               <Text style={styles.addAddressText}>Selecionar Endereço</Text>
             </TouchableOpacity>
           )}
@@ -349,9 +261,7 @@ const ReviewScreen: React.FC = () => {
           </View>
           <View style={styles.deliveryTimeContainer}>
             <Text style={styles.deliveryTime}>{estimatedTime}</Text>
-            <Text style={styles.deliveryNote}>
-              Tempo estimado para sua região
-            </Text>
+            <Text style={styles.deliveryNote}>Tempo estimado para sua região</Text>
           </View>
         </View>
 
@@ -361,26 +271,22 @@ const ReviewScreen: React.FC = () => {
             <Ionicons name="receipt" size={20} color={PRIMARY_COLOR} />
             <Text style={styles.sectionTitle}>Resumo do Pedido</Text>
           </View>
-
           <View style={styles.summaryContainer}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>R$ {subtotal.toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>R$ {subtotal.toFixed(2).replace('.', ',')}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Taxa de entrega</Text>
-              <Text style={styles.summaryValue}>
-                R$ {deliveryFee.toFixed(2)}
-              </Text>
+              <Text style={styles.summaryValue}>R$ {deliveryFee.toFixed(2).replace('.', ',')}</Text>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>R$ {total.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>R$ {total.toFixed(2).replace('.', ',')}</Text>
             </View>
           </View>
         </View>
 
-        {/* Espaço para o botão fixo */}
         <View style={styles.bottomSpace} />
       </ScrollView>
 
@@ -389,25 +295,16 @@ const ReviewScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.finalizeButton,
-            finalizing && styles.finalizeButtonDisabled,
+            (finalizing || !selectedAddress) && styles.finalizeButtonDisabled,
           ]}
           onPress={handleFinalizePedido}
-          disabled={finalizing || !selectedAddress}
+          disabled={finalizing || !selectedAddress || loading}
         >
           {finalizing ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Ionicons
-                name="logo-whatsapp"
-                size={20}
-                color="#fff"
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.finalizeButtonText}>Enviar por WhatsApp</Text>
-              <Text style={styles.finalizeButtonPrice}>
-                R$ {total.toFixed(2)}
-              </Text>
+              <Text style={styles.finalizeButtonText}>Confirmar Pedido</Text>
             </>
           )}
         </TouchableOpacity>
@@ -630,10 +527,9 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
   },
   bottomSpace: {
-    height: 100,
+    height: 100, 
   },
   bottomContainer: {
-    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -667,14 +563,14 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
-    marginRight: 8,
   },
   finalizeButtonPrice: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+    position: 'absolute',
+    right: 16,
   },
-  // Estilos para ReviewCartItem
   reviewItemContainer: {
     flexDirection: "row",
     alignItems: "center",

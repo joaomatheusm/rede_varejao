@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddressItem from "../../../../components/AddressItem";
+import TabBar from "../../../../components/TabBar";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Endereco, enderecoService } from "../../../../lib/enderecoService";
 
@@ -26,18 +27,26 @@ const AddressListScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const carregarEnderecos = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
 
     try {
-      const enderecosData = await enderecoService.buscarEnderecosPorUsuario(
-        user.id
-      );
+      const enderecosData = await enderecoService.buscarEnderecosPorUsuario(user.id);
       setEnderecos(enderecosData);
 
-      // Selecionar o primeiro endereço se houver
-      if (enderecosData.length > 0) {
-        setSelectedAddress(enderecosData[0]);
-      }
+      const selectedId = selectedAddress?.id;
+      const
+ 
+novoEnderecoSelecionado = 
+        enderecosData.find(e => e.id === selectedId) || // Tenta manter o selecionado
+        enderecosData[0] || // Se não puder, pega o primeiro
+        null; // Se não houver, é nulo
+      
+      setSelectedAddress(novoEnderecoSelecionado);
+
     } catch (error) {
       console.error("Erro ao carregar endereços:", error);
       Alert.alert("Erro", "Não foi possível carregar os endereços.");
@@ -45,11 +54,14 @@ const AddressListScreen: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user?.id]);
+  }, [user?.id, selectedAddress?.id]);
 
-  useEffect(() => {
-    carregarEnderecos();
-  }, [carregarEnderecos]);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      carregarEnderecos();
+    }, [carregarEnderecos])
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -77,21 +89,22 @@ const AddressListScreen: React.FC = () => {
 
   const handleDeleteAddress = async (endereco: Endereco) => {
     if (!endereco.id) return;
-
-    try {
-      await enderecoService.deletarEndereco(endereco.id);
-      Alert.alert("Sucesso", "Endereço excluído com sucesso!");
-
-      // Se era o endereço selecionado, limpar seleção
-      if (selectedAddress?.id === endereco.id) {
-        setSelectedAddress(null);
-      }
-
-      carregarEnderecos();
-    } catch (error) {
-      console.error("Erro ao excluir endereço:", error);
-      Alert.alert("Erro", "Não foi possível excluir o endereço.");
-    }
+    Alert.alert("Excluir Endereço", "Tem certeza que deseja excluir este endereço?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir", style: "destructive",
+        onPress: async () => {
+          try {
+            await enderecoService.deletarEndereco(endereco.id);
+            Alert.alert("Sucesso", "Endereço excluído com sucesso!");
+            carregarEnderecos(); // Recarrega a lista
+          } catch (error) {
+            console.error("Erro ao excluir endereço:", error);
+            Alert.alert("Erro", "Não foi possível excluir o endereço.");
+          }
+        },
+      },
+    ]);
   };
 
   const handleContinue = () => {
@@ -99,9 +112,10 @@ const AddressListScreen: React.FC = () => {
       Alert.alert("Atenção", "Selecione um endereço para continuar.");
       return;
     }
-
-    // Navegar para a tela de revisão do pedido
-    router.push("/(panel)/cart/review/page");
+    router.push({
+        pathname: "/(panel)/cart/review/page",
+        params: { enderecoId: selectedAddress.id.toString() }
+    });
   };
 
   const renderAddressItem = ({ item }: { item: Endereco }) => (
@@ -130,7 +144,7 @@ const AddressListScreen: React.FC = () => {
     </View>
   );
 
-  if (loading) {
+  if (loading && enderecos.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
         <View style={styles.header}>
@@ -144,6 +158,7 @@ const AddressListScreen: React.FC = () => {
           <ActivityIndicator size="large" color={PRIMARY_COLOR} />
           <Text style={styles.loadingText}>Carregando endereços...</Text>
         </View>
+        <TabBar />
       </SafeAreaView>
     );
   }
@@ -163,56 +178,53 @@ const AddressListScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        {enderecos.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <>
-            <FlatList
-              data={enderecos}
-              keyExtractor={(item) => item.id?.toString() || ""}
-              renderItem={renderAddressItem}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContainer}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                  colors={[PRIMARY_COLOR]}
-                />
-              }
+      <FlatList
+        data={enderecos}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderAddressItem}
+        ListEmptyComponent={enderecos.length === 0 ? renderEmptyState : null}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[PRIMARY_COLOR]}
+          />
+        }
+        style={{ flex: 1 }}
+      />
+
+      {enderecos.length > 0 && (
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={styles.addNewButton}
+            onPress={handleAddNewAddress}
+          >
+            <Ionicons
+              name="add-circle-outline"
+              size={20}
+              color={PRIMARY_COLOR}
             />
+            <Text style={styles.addNewButtonText}>
+              Adicionar Novo Endereço
+            </Text>
+          </TouchableOpacity>
 
-            <View style={styles.bottomSection}>
-              <TouchableOpacity
-                style={styles.addNewButton}
-                onPress={handleAddNewAddress}
-              >
-                <Ionicons
-                  name="add-circle-outline"
-                  size={20}
-                  color={PRIMARY_COLOR}
-                />
-                <Text style={styles.addNewButtonText}>
-                  Adicionar Novo Endereço
-                </Text>
-              </TouchableOpacity>
-
-              {selectedAddress && (
-                <TouchableOpacity
-                  style={styles.continueButton}
-                  onPress={handleContinue}
-                >
-                  <Text style={styles.continueButtonText}>
-                    Entregar neste endereço
-                  </Text>
-                  <Ionicons name="arrow-forward" size={20} color="#fff" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </>
-        )}
-      </View>
+          {selectedAddress && (
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleContinue}
+            >
+              <Text style={styles.continueButtonText}>
+                Entregar neste endereço
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+      <TabBar />
     </SafeAreaView>
   );
 };
@@ -221,6 +233,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+    paddingBottom: 80,
   },
   header: {
     flexDirection: "row",
@@ -231,18 +244,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
   },
   backButton: {
     padding: 8,
-    borderRadius: 8,
   },
   title: {
     fontSize: 18,
@@ -251,13 +255,9 @@ const styles = StyleSheet.create({
   },
   addButton: {
     padding: 8,
-    borderRadius: 8,
   },
   placeholder: {
-    width: 32,
-  },
-  content: {
-    flex: 1,
+    width: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -271,13 +271,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingVertical: 16,
-    paddingBottom: 160, // Espaço para botões inferiores
+    paddingHorizontal: 16,
   },
   emptyState: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
+    marginTop: "30%",
   },
   emptyTitle: {
     fontSize: 20,
@@ -305,16 +305,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   bottomSection: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
     paddingHorizontal: 16,
     paddingVertical: 16,
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   addNewButton: {
     flexDirection: "row",
@@ -340,14 +336,6 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY_COLOR,
     paddingVertical: 16,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   continueButtonText: {
     color: "#fff",
@@ -356,5 +344,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 });
+
 
 export default AddressListScreen;

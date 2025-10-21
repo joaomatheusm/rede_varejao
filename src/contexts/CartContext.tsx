@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   addToCart as addToCartService,
   CartItem,
+  createOrderFromCart as createOrderService,
   fetchCart,
   removeFromCart as removeFromCartService,
   updateQuantity as updateQuantityService,
@@ -17,7 +18,7 @@ type CartContextData = {
   addToCart: (product: Produto) => Promise<void>;
   removeFromCart: (cartItemId: number) => Promise<void>;
   updateQuantity: (cartItemId: number, newQuantity: number) => Promise<void>;
-  clearCart: () => void;
+  createOrder: (enderecoId: number, metodoPagamento: string, taxaEntrega: number) => Promise<number | null>;
 };
 
 const CartContext = createContext<CartContextData>({} as CartContextData);
@@ -49,7 +50,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   async function addToCart(product: Produto) {
     const previousItems = items;
-
     const existingItem = items.find((item) => item.produto_id === product.id);
     if (existingItem) {
       setItems(
@@ -61,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       );
     } else {
       const newItem: CartItem = {
-        id: Date.now(), // ID temporário
+        id: Date.now(),
         produto_id: product.id,
         quantidade: 1,
         produto: product,
@@ -71,8 +71,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await addToCartService(product.id);
-      // Recarrega do banco em segundo plano para sincronizar IDs, se necessário
-      loadCart();
     } catch (error) {
       console.error("Falha ao salvar no banco. Revertendo a UI.", error);
       setItems(previousItems);
@@ -96,9 +94,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const updateQuantity = (cartItemId: number, newQuantity: number) =>
     performCartAction(() => updateQuantityService(cartItemId, newQuantity));
 
-  const clearCart = () => {
-    setItems([]);
+  const createOrder = async (
+    enderecoId: number, 
+    metodoPagamento: string, 
+    taxaEntrega: number
+  ): Promise<number | null> => {
+    if (items.length === 0) {
+      console.warn("Tentativa de criar pedido com carrinho vazio.");
+      return null;
+    }
+    setLoading(true);
+    try {
+      const newOrderId = await createOrderService(enderecoId, metodoPagamento, taxaEntrega);
+      
+      setItems([]); 
+      
+      return newOrderId;
+    } catch (error) {
+      console.error("Falha ao criar o pedido no contexto:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const totalItems = items.reduce((sum, item) => sum + item.quantidade, 0);
 
@@ -118,7 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addToCart,
     removeFromCart,
     updateQuantity,
-    clearCart,
+    createOrder,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
