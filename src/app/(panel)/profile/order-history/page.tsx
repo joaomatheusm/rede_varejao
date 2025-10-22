@@ -1,29 +1,54 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, Stack } from 'expo-router'; // 1. IMPORTADO O 'Stack'
+import { router, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { orderService, Pedido } from '../../../../lib/orderService';
 
 const PRIMARY_COLOR = "#FF4757";
 
+// Função auxiliar para pegar as cores baseado nos status do banco
+const getStatusColors = (statusDescricao: string) => {
+    let backgroundColor = '#FFF3E0';
+    let borderColor = '#FFE0B3';
+    let textColor = '#BF8F00';
+
+    if (statusDescricao === 'Confirmado') {
+        backgroundColor = '#E0E7FF';
+        borderColor = '#C7D2FE';
+        textColor = '#4338CA';
+    } else if (statusDescricao === 'Entregue') {
+        backgroundColor = '#D1FAE5';
+        borderColor = '#A7F3D0';
+        textColor = '#065F46';
+    } else if (statusDescricao === 'Cancelado') {
+        backgroundColor = '#FEE2E2';
+        borderColor = '#FECACA';
+        textColor = '#991B1B';
+    }
+
+    return { backgroundColor, borderColor, textColor };
+};
+
+
 // Componente para renderizar cada pedido na lista
-// (Seu componente OrderItemCard permanece igual)
 const OrderItemCard: React.FC<{ pedido: Pedido }> = ({ pedido }) => {
   const dataPedido = new Date(pedido.data_criacao).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
   });
+
+  const statusColors = getStatusColors(pedido.status_descricao);
 
   return (
     <View style={styles.card}>
@@ -32,9 +57,21 @@ const OrderItemCard: React.FC<{ pedido: Pedido }> = ({ pedido }) => {
         <Text style={styles.cardDate}>{dataPedido}</Text>
       </View>
       <View style={styles.cardBody}>
-        <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{pedido.status_descricao}</Text>
+        <View style={[
+            styles.statusBadge, 
+            { 
+                backgroundColor: statusColors.backgroundColor, 
+                borderColor: statusColors.borderColor 
+            }
+        ]}>
+            <Text style={[
+                styles.statusText,
+                { color: statusColors.textColor }
+            ]}>
+                {pedido.status_descricao}
+            </Text>
         </View>
+
         <Text style={styles.cardLabel}>Itens:</Text>
         {pedido.itens.map((item) => (
           <View key={item.id} style={styles.itemRow}>
@@ -74,9 +111,7 @@ const OrderHistoryScreen = () => {
   };
 
   return (
-    // 2. ADICIONADO O FRAGMENT <>
     <> 
-      {/* 3. ADICIONADA A OPÇÃO PARA ESCONDER O HEADER */}
       <Stack.Screen options={{ headerShown: false }} /> 
 
       <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
@@ -108,12 +143,11 @@ const OrderHistoryScreen = () => {
           />
         )}
       </SafeAreaView>
-    </> // 4. FECHADO O FRAGMENT </>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  // Seus estilos permanecem os mesmos
   container: { flex: 1, backgroundColor: '#F8F9FA' },
   header: {
     flexDirection: 'row',
@@ -158,8 +192,6 @@ const styles = StyleSheet.create({
   cardDate: { fontSize: 14, color: '#888' },
   cardBody: { padding: 16 },
   statusBadge: {
-    backgroundColor: '#E0E7FF',
-    borderColor: '#C7D2FE',
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 10,
@@ -167,7 +199,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 12,
   },
-  statusText: { color: '#4338CA', fontSize: 12, fontWeight: 'bold' },
+  statusText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   cardLabel: { fontSize: 14, color: '#888', marginBottom: 8 },
   itemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   itemImage: { width: 30, height: 30, borderRadius: 4, marginRight: 8, backgroundColor: '#EEE' },
