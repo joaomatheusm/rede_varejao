@@ -74,6 +74,10 @@ function MainLayout() {
         name="(panel)/search/page"
         options={{ headerShown: false }}
       />
+      <Stack.Screen 
+        name="(panel)/profile/order-history/page" 
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

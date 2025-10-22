@@ -178,6 +178,8 @@ const ProfileScreen: React.FC = () => {
           router.push("/(panel)/cart/address/list");
         } else if (item.screen === "Favorites") {
           router.push("/(panel)/favorites/page");
+        } else if (item.screen === "OrderHistory") {
+          router.push("/(panel)/profile/order-history/page");
         } else {
           console.log("Abrir", item.screen);
         }
