@@ -56,11 +56,10 @@ const LoginScreen = () => {
       >
         {/* Header com Logo */}
         <View style={styles.header}>
-          {/* Logo circular com sua imagem personalizada */}
           <View style={styles.logoContainer}>
             <View>
               <Image
-                source={require("../../../../assets/img/logo.png")} // Ajuste o nome do arquivo conforme necessário
+                source={require("../../../../assets/img/logo.png")} 
                 style={styles.logoImage}
                 resizeMode="contain"
               />                            

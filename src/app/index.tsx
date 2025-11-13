@@ -5,7 +5,7 @@ export default function Index() {
   const { loading } = useAuth();
 
   if (!loading) {
-    // A navegação será feita pelo _layout.tsx baseado no estado do user
+
     return null;
   }
 

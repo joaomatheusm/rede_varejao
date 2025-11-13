@@ -31,7 +31,7 @@ interface AddressFormProps {
   initialData?: Partial<Endereco>;
   loading?: boolean;
   submitButtonText?: string;
-  checkDelivery?: boolean; // Nova prop para habilitar verificação de entrega
+  checkDelivery?: boolean; 
 }
 
 const PRIMARY_COLOR = "#FF4D4D";
@@ -117,7 +117,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
       return;
     }
 
-    // Se checkDelivery estiver habilitado, verificar antes de submeter
     if (checkDelivery) {
       await checkDeliveryAvailability();
       return; // A verificação chamará o submit se aprovado
@@ -164,7 +163,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
       setDeliveryCheck(result);
 
       if (result.available) {
-        // Endereço dentro do raio, mostrar confirmação e permitir prosseguir
         Alert.alert("Entrega Disponível! ✅", result.message, [
           {
             text: "Continuar",
@@ -243,7 +241,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
         return;
       }
 
-      // Obter localização atual
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });

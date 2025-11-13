@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 export interface Endereco {
   id: number;
-  usuario_id: string; // UUID do Supabase Auth
+  usuario_id: string; 
   data_criacao?: string;
   data_ult_atualizacao?: string;
   complemento?: string;

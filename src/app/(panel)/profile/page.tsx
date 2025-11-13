@@ -82,16 +82,7 @@ const ProfileScreen: React.FC = () => {
           switchValue: notificationsEnabled,
           onSwitchChange: setNotificationsEnabled,
         },
-        {
-          icon: "moon-outline",
-          text: "Modo Escuro",
-          screen: "DarkMode",
-          color: "#9C27B0",
-          description: "Tema escuro/claro",
-          hasSwitch: true,
-          switchValue: darkMode,
-          onSwitchChange: setDarkMode,
-        },
+
       ],
     },
     {
@@ -130,7 +121,7 @@ const ProfileScreen: React.FC = () => {
     setShowLogoutModal(false);
 
     try {
-      // Fazer logout no Supabase
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {

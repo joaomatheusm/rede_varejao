@@ -36,7 +36,7 @@ const SignUpScreen = () => {
     }
 
     setLoading(true);
-    setIsSigningUp(true); // Bloquear redirecionamentos automáticos
+    setIsSigningUp(true); 
 
     try {
       // Garantir que não há sessão ativa antes do cadastro
@@ -59,16 +59,14 @@ const SignUpScreen = () => {
         return;
       }
 
-      // Fazer logout novamente para garantir que não auto-logue
+
       await supabase.auth.signOut();
 
       setLoading(false);
-      setIsSigningUp(false); // Liberar redirecionamentos
-
-      // Redirecionar imediatamente sem Alert para evitar flash
+      setIsSigningUp(false); 
       router.replace("/(auth)/signin/page");
 
-      // Mostrar toast ou notificação de sucesso após redirecionar
+
       setTimeout(() => {
         Alert.alert(
           "Cadastro realizado!",

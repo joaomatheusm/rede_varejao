@@ -20,7 +20,7 @@ function MainLayout() {
   const { user, loading, isSigningUp } = useAuth();
 
   useEffect(() => {
-    if (loading || isSigningUp) return; // Aguarda carregar a sessão ou finalizar cadastro
+    if (loading || isSigningUp) return; 
 
     if (user) {
       router.replace("/(panel)/home/page");

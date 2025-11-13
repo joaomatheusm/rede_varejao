@@ -1,4 +1,3 @@
-// Configurações do serviço de entrega
 export const DELIVERY_CONFIG = {
   storeLocation: {
     latitude: -22.924671101962982, 

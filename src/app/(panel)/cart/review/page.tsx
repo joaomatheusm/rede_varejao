@@ -130,7 +130,7 @@ const ReviewScreen: React.FC = () => {
       if (newOrderId) {
         Alert.alert(
           "Pedido Confirmado!",
-          `Seu pedido #${newOrderId} foi recebido e já está sendo preparado.`,
+          `Seu pedido foi recebido.`,
           [
             {
               text: "OK",

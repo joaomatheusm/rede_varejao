@@ -16,9 +16,6 @@ class DeliveryService {
   private storeLocation: Coordinates = DELIVERY_CONFIG.storeLocation;
   private maxDeliveryRadius = DELIVERY_CONFIG.maxDeliveryRadius;
 
-  /**
-   * Define as coordenadas do estabelecimento
-   */
   setStoreLocation(coordinates: Coordinates) {
     this.storeLocation = coordinates;
   }
@@ -103,7 +100,7 @@ class DeliveryService {
    //Calcular distância entre duas coordenadas usando a fórmula de Haversine
    
   private calculateDistance(point1: Coordinates, point2: Coordinates): number {
-    const R = 6371; // Raio da Terra em km
+    const R = 6371; // raio da terra em km
     const dLat = this.toRad(point2.latitude - point1.latitude);
     const dLng = this.toRad(point2.longitude - point1.longitude);
     
@@ -112,7 +109,7 @@ class DeliveryService {
               Math.sin(dLng / 2) * Math.sin(dLng / 2);
     
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distância em km
+    return R * c; // distancia em km
   }
 
   
@@ -122,8 +119,6 @@ class DeliveryService {
     return degrees * (Math.PI / 180);
   }
 
-  
-   //Verificar se as coordenadas estão dentro do raio usando coordenadas diretas
    
   async checkDeliveryByCoordinates(coordinates: Coordinates): Promise<DeliveryCheck> {
     try {
@@ -151,8 +146,6 @@ class DeliveryService {
     }
   }
 
-  
-   //Obter informações do serviço de entrega
   
   getDeliveryInfo() {
     return {
