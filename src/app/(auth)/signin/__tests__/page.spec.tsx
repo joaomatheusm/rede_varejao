@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react-native";
-import LoginScreen from "./page";
+import LoginScreen from "../page";
 
 jest.mock("@expo/vector-icons", () => ({
   Ionicons: "Ionicons",
